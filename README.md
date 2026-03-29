@@ -73,7 +73,7 @@ Upstream modules (containers/services Django)
 
 - Entrée applicative: `dealhost.asgi:application`.
 - Serveur applicatif: `granian --interface asgi dealhost.asgi:application`.
-- Le fichier `dealhost/wsgi.py` peut rester présent pour compatibilité outillage, mais la stack Docker utilise exclusivement ASGI + Granian.
+- Le projet est **ASGI-only** et ne contient pas d’entrée WSGI.
 
 ## Cache et sessions
 
