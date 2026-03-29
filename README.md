@@ -135,9 +135,9 @@ Upstream modules (containers/services Django)
 
 ## GitHub Workflows
 
-- `CI Django DEALHost` (`.github/workflows/ci.yml`) : installe le projet, vérifie les migrations, exécute explicitement les tests unitaires (`python manage.py test tests --verbosity 2`) et un contrôle de compilation.
+- `CI Django DEALHost` (`.github/workflows/ci.yml`) : installe le projet avec `uv`, vérifie les migrations, exécute explicitement les tests unitaires (`uv run python manage.py test tests --verbosity 2`) et un contrôle de compilation.
 - `Validate APISIX Routes` (`.github/workflows/apisix-routes-validate.yml`) : valide la syntaxe JSON des routes APISIX et vérifie la présence d'une route coeur `module-core`.
-- `Pre-commit` (`.github/workflows/pre-commit.yml`) : installe puis exécute `pre-commit run --all-files --show-diff-on-failure` (incluant Ruff en mode `--select ALL` et `ruff-format`).
+- `Pre-commit` (`.github/workflows/pre-commit.yml`) : installe `pre-commit` via `uv` puis exécute `uv run pre-commit run --all-files --show-diff-on-failure` (incluant Ruff en mode `--select ALL` et `ruff-format`).
 
 ## Dependency Automation
 
