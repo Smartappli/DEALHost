@@ -92,6 +92,15 @@ CACHES = {
         "LOCATION": cache_config().valkey_url,
     }
 }
+
+PASSWORD_HASHERS = [
+    "django.contrib.auth.hashers.Argon2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher",
+    "django.contrib.auth.hashers.BCryptSHA256PasswordHasher",
+    "django.contrib.auth.hashers.ScryptPasswordHasher",
+]
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 GITHUB = github_config()
