@@ -49,6 +49,10 @@ Upstream modules (containers/services Django)
 - `POST /api/hosting/autodiscover/` : auto découverte depuis les manifests tools/apps.
 - `GET /hosting/manage/` : interface de gestion (tableaux modules, tools, applications + déclenchement auto découverte).
 - `POST /i18n/setlang/` : changement de langue de l’interface de gestion.
+- `GET/POST /api/iam/users/` : gestion des utilisateurs (avec groupes/permissions + endpoint `set-password`).
+- `GET/POST /api/iam/groups/` : gestion des groupes (rôles) et permissions associées.
+- `GET /api/iam/permissions/` : catalogue des permissions Django.
+- `GET /iam/manage/` : interface IAM (utilisateurs, groupes, permissions).
 
 
 ### Auto découverte des tools et applications
