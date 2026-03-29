@@ -92,6 +92,53 @@ create_application(
 )
 ```
 
+
+### SDK Python (tools et applications)
+
+Le SDK Python est disponible dans `sdk/python`.
+
+Exemple rapide :
+
+```python
+from dealhost_sdk import DealHostClient
+
+client = DealHostClient("http://localhost:8000", token="YOUR_TOKEN")
+
+client.create_tool(
+    name="Backoffice",
+    slug="backoffice",
+    description="Outil d'administration",
+    module_ids=[1, 2],
+    enabled=True,
+)
+
+client.create_application(
+    name="Storefront",
+    slug="storefront",
+    description="Application e-commerce",
+    module_ids=[1],
+    enabled=True,
+)
+```
+
+### SDK Rust (tools et applications)
+
+Le SDK Rust est disponible dans `sdk/rust/dealhost-sdk`.
+
+Exemple rapide :
+
+```rust
+use dealhost_sdk::DealHostClient;
+
+fn demo() -> Result<(), reqwest::Error> {
+    let client = DealHostClient::new("http://localhost:8000", Some("YOUR_TOKEN".to_string()));
+
+    client.create_tool("Backoffice", "backoffice", "Outil d'administration", vec![1, 2], true)?;
+    client.create_application("Storefront", "storefront", "Application e-commerce", vec![1], true)?;
+    Ok(())
+}
+```
+
 ### Auto découverte des tools et applications
 
 - Les manifests de découverte sont lus depuis:
