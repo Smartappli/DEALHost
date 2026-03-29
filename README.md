@@ -55,6 +55,43 @@ Upstream modules (containers/services Django)
 - `GET /iam/manage/` : interface IAM (utilisateurs, groupes, permissions).
 
 
+
+### SDK R (tools et applications)
+
+Un SDK R minimal est disponible dans `sdk/r/dealhostR` pour piloter l’API hosting.
+
+Fonctions exposées :
+- `dealhost_client(base_url, token)`
+- `create_tool(...)`, `update_tool(...)`, `list_tools(...)`
+- `create_application(...)`, `update_application(...)`, `list_applications(...)`
+
+Exemple rapide :
+
+```r
+# install.packages(c("httr2", "jsonlite"))
+source("sdk/r/dealhostR/R/client.R")
+
+client <- dealhost_client("http://localhost:8000", token = "YOUR_TOKEN")
+
+create_tool(
+  client,
+  name = "Backoffice",
+  slug = "backoffice",
+  description = "Outil d'administration",
+  module_ids = c(1, 2),
+  enabled = TRUE
+)
+
+create_application(
+  client,
+  name = "Storefront",
+  slug = "storefront",
+  description = "Application e-commerce",
+  module_ids = c(1),
+  enabled = TRUE
+)
+```
+
 ### Auto découverte des tools et applications
 
 - Les manifests de découverte sont lus depuis:
