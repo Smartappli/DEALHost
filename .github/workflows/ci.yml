@@ -6,7 +6,7 @@ on:
   pull_request:
 
 jobs:
-  test:
+  unit-tests:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -29,13 +29,13 @@ jobs:
       - name: Run migrations check
         run: python manage.py makemigrations --check --dry-run
 
-      - name: Run tests
+      - name: Run unit tests
         env:
           DJANGO_SETTINGS_MODULE: dealhost.settings.dev
           GITHUB_TOKEN: test-token
           GITHUB_WEBHOOK_SECRET: test-secret
           APISIX_ADMIN_KEY: test-key
-        run: python manage.py test
+        run: python manage.py test tests --verbosity 2
 
       - name: Compile check
         run: python -m compileall dealhost apps tests
