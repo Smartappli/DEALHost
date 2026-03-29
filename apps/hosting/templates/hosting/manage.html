@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>DEALHost - Gestion tools/apps</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 2rem; }
+      h1, h2 { margin-bottom: 0.5rem; }
+      table { border-collapse: collapse; width: 100%; margin-bottom: 2rem; }
+      th, td { border: 1px solid #ddd; padding: 0.5rem; text-align: left; }
+      th { background: #f4f4f4; }
+      .messages { margin-bottom: 1rem; padding: 0; list-style: none; }
+      .messages li { padding: 0.5rem; border-radius: 4px; margin-bottom: 0.4rem; }
+      .messages .success { background: #e8f7e8; }
+      .messages .error { background: #fdeaea; }
+    </style>
+  </head>
+  <body>
+    <h1>Interface de gestion des modules, tools et applications</h1>
+    <form method="post" action="{% url 'hosting-management-autodiscover' %}">
+      {% csrf_token %}
+      <button type="submit">Auto découvrir les tools et applications</button>
+    </form>
+
+    {% if messages %}
+      <ul class="messages">
+        {% for message in messages %}
+          <li class="{{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+    <h2>Modules</h2>
+    <table>
+      <thead>
+        <tr><th>Nom</th><th>Slug</th><th>Branch</th><th>Actif</th></tr>
+      </thead>
+      <tbody>
+        {% for module in modules %}
+          <tr><td>{{ module.name }}</td><td>{{ module.slug }}</td><td>{{ module.branch }}</td><td>{{ module.enabled }}</td></tr>
+        {% empty %}
+          <tr><td colspan="4">Aucun module</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <h2>Tools</h2>
+    <table>
+      <thead>
+        <tr><th>Nom</th><th>Slug</th><th>Version courante</th><th>Modules</th><th>Actif</th></tr>
+      </thead>
+      <tbody>
+        {% for tool in tools %}
+          <tr><td>{{ tool.name }}</td><td>{{ tool.slug }}</td><td>{{ tool.current_version }}</td><td>{% for module in tool.modules.all %}{{ module.slug }}{% if not forloop.last %}, {% endif %}{% empty %}-{% endfor %}</td><td>{{ tool.enabled }}</td></tr>
+        {% empty %}
+          <tr><td colspan="5">Aucun tool</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <h2>Applications</h2>
+    <table>
+      <thead>
+        <tr><th>Nom</th><th>Slug</th><th>Version courante</th><th>Modules</th><th>Actif</th></tr>
+      </thead>
+      <tbody>
+        {% for application in applications %}
+          <tr><td>{{ application.name }}</td><td>{{ application.slug }}</td><td>{{ application.current_version }}</td><td>{% for module in application.modules.all %}{{ module.slug }}{% if not forloop.last %}, {% endif %}{% empty %}-{% endfor %}</td><td>{{ application.enabled }}</td></tr>
+        {% empty %}
+          <tr><td colspan="5">Aucune application</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </body>
+</html>

@@ -1,0 +1,6 @@
+{
+  "name": "Module Core",
+  "slug": "module-core",
+  "image": "ghcr.io/dealiot/module-core:latest",
+  "branch": "main"
+}
