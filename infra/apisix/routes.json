@@ -1,0 +1,15 @@
+{
+  "routes": [
+    {
+      "id": "module-core",
+      "uri": "/core/*",
+      "name": "module-core",
+      "upstream": {
+        "type": "roundrobin",
+        "nodes": {
+          "django-app:8000": 1
+        }
+      }
+    }
+  ]
+}

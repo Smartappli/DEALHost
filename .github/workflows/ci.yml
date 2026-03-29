@@ -1,0 +1,56 @@
+name: CI Django DEALHost
+
+on:
+  push:
+    branches: ["main", "work"]
+  pull_request:
+
+jobs:
+  unit-tests:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.12", "3.13", "3.14"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Skip unsupported Python versions
+        if: matrix.python-version == '3.12'
+        run: echo "Python 3.12 is intentionally unsupported (project minimum is 3.13)."
+
+      - name: Install requirements with uv
+        if: matrix.python-version != '3.12'
+        run: uv pip install --system -r requirements.txt
+
+      - name: Install project package with uv
+        if: matrix.python-version != '3.12'
+        run: uv pip install --system -e .
+
+      - name: Run migrations check
+        if: matrix.python-version != '3.12'
+        run: uv run python manage.py makemigrations --check --dry-run
+
+      - name: Run unit tests
+        if: matrix.python-version != '3.12'
+        env:
+          DJANGO_SETTINGS_MODULE: dealhost.settings.dev
+          GITHUB_TOKEN: test-token
+          GITHUB_WEBHOOK_SECRET: test-secret
+          APISIX_ADMIN_KEY: test-key
+        run: uv run python manage.py test tests --verbosity 2
+
+      - name: Compile check
+        if: matrix.python-version != '3.12'
+        run: uv run python -m compileall dealhost apps tests

@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dealhost"
+version = "0.1.0"
+description = "Architecture d'hébergement modulaire Django 6 avec APISIX + GitHub"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+  "Django>=6.0,<6.1",
+  "djangorestframework>=3.16,<4.0",
+  "httpx>=0.28,<0.29",
+  "python-dotenv>=1.1,<2.0",
+  "granian>=2.4,<3.0",
+  "servestatic>=2.0,<3.0",
+  "argon2-cffi>=25.1,<26.0",
+]
+
+[tool.setuptools]
+packages = ["dealhost", "dealhost.settings", "apps", "apps.common", "apps.hosting", "apps.gateway"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "dealhost.settings.dev"
+python_files = ["test_*.py", "*_test.py"]
