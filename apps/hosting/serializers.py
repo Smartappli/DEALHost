@@ -1,6 +1,11 @@
+import re
+
+from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
-from .models import HostedApplication, Module, Tool
+from .models import ApplicationVersion, HostedApplication, Module, Tool, ToolVersion
+
+SEMVER_PATTERN = r"^v?\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$"
 
 
 class ModuleSummarySerializer(serializers.ModelSerializer):
@@ -25,6 +30,20 @@ class ModuleSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_at"]
 
 
+class ToolVersionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ToolVersion
+        fields = ["id", "version", "notes", "source", "created_at"]
+        read_only_fields = fields
+
+
+class ApplicationVersionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ApplicationVersion
+        fields = ["id", "version", "notes", "source", "created_at"]
+        read_only_fields = fields
+
+
 class ToolSerializer(serializers.ModelSerializer):
     modules = ModuleSummarySerializer(many=True, read_only=True)
     module_ids = serializers.PrimaryKeyRelatedField(
@@ -33,6 +52,7 @@ class ToolSerializer(serializers.ModelSerializer):
         many=True,
         required=False,
     )
+    versions = ToolVersionSerializer(many=True, read_only=True)
 
     class Meta:
         model = Tool
@@ -43,10 +63,14 @@ class ToolSerializer(serializers.ModelSerializer):
             "description",
             "modules",
             "module_ids",
+            "current_version",
+            "released_at",
+            "versions",
             "enabled",
             "created_at",
+            "updated_at",
         ]
-        read_only_fields = ["id", "created_at"]
+        read_only_fields = ["id", "created_at", "updated_at"]
 
 
 class HostedApplicationSerializer(serializers.ModelSerializer):
@@ -57,6 +81,7 @@ class HostedApplicationSerializer(serializers.ModelSerializer):
         many=True,
         required=False,
     )
+    versions = ApplicationVersionSerializer(many=True, read_only=True)
 
     class Meta:
         model = HostedApplication
@@ -67,10 +92,14 @@ class HostedApplicationSerializer(serializers.ModelSerializer):
             "description",
             "modules",
             "module_ids",
+            "current_version",
+            "released_at",
+            "versions",
             "enabled",
             "created_at",
+            "updated_at",
         ]
-        read_only_fields = ["id", "created_at"]
+        read_only_fields = ["id", "created_at", "updated_at"]
 
 
 class ModuleAttachSerializer(serializers.Serializer):
@@ -78,3 +107,16 @@ class ModuleAttachSerializer(serializers.Serializer):
         source="module",
         queryset=Module.objects.all(),
     )
+
+
+class VersionCreateSerializer(serializers.Serializer):
+    version = serializers.CharField(max_length=32)
+    notes = serializers.CharField(required=False, allow_blank=True)
+    source = serializers.CharField(max_length=32, required=False, default="manual")
+
+    def validate_version(self, value: str) -> str:
+        normalized = value.strip()
+        if not re.fullmatch(SEMVER_PATTERN, normalized):
+            msg = _("Version must follow semantic versioning (example: 1.2.3 or v1.2.3).")
+            raise serializers.ValidationError(msg)
+        return normalized.lstrip("v")

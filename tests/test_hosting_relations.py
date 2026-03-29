@@ -70,3 +70,26 @@ class HostingManagementApiTests(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["slug"], "storefront")
+
+    def test_tool_version_lifecycle_endpoint(self) -> None:
+        url = reverse("tools-versions", kwargs={"pk": self.tool.pk})
+
+        create_response = self.client.post(
+            url,
+            {"version": "1.2.0", "notes": "Minor release", "source": "manual"},
+            format="json",
+        )
+        self.assertEqual(create_response.status_code, 201)
+        self.tool.refresh_from_db()
+        self.assertEqual(self.tool.current_version, "1.2.0")
+
+        list_response = self.client.get(url)
+        self.assertEqual(list_response.status_code, 200)
+        self.assertEqual(len(list_response.data), 1)
+        self.assertEqual(list_response.data[0]["version"], "1.2.0")
+
+    def test_application_version_rejects_invalid_semver(self) -> None:
+        url = reverse("applications-versions", kwargs={"pk": self.application.pk})
+        response = self.client.post(url, {"version": "2026"}, format="json")
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("version", response.data)

@@ -46,6 +46,126 @@ Upstream modules (containers/services Django)
 - `GET/POST /api/hosting/modules/` : CRUD des modules hébergés.
 - `GET/POST /api/hosting/tools/` : CRUD des outils (chaque outil peut lier plusieurs modules).
 - `GET/POST /api/hosting/applications/` : CRUD des applications hébergées (chaque application peut lier plusieurs modules).
+- `POST /api/hosting/autodiscover/` : auto découverte depuis les manifests tools/apps.
+- `GET /hosting/manage/` : interface de gestion (modules, tools, datasets accessibles à l'utilisateur connecté, applications + auto découverte).
+- `POST /i18n/setlang/` : changement de langue de l’interface de gestion.
+- `GET/POST /api/iam/users/` : gestion des utilisateurs (avec groupes/permissions + endpoint `set-password`).
+- `GET/POST /api/iam/groups/` : gestion des groupes (rôles) et permissions associées.
+- `GET /api/iam/permissions/` : catalogue des permissions Django.
+- `GET /iam/manage/` : interface IAM (utilisateurs, groupes, permissions).
+
+
+
+### SDK R (tools et applications)
+
+Un SDK R minimal est disponible dans `sdk/r/dealhostR` pour piloter l’API hosting.
+
+Fonctions exposées :
+- `dealhost_client(base_url, token)`
+- `create_tool(...)`, `update_tool(...)`, `list_tools(...)`
+- `create_application(...)`, `update_application(...)`, `list_applications(...)`
+
+Exemple rapide :
+
+```r
+# install.packages(c("httr2", "jsonlite"))
+source("sdk/r/dealhostR/R/client.R")
+
+client <- dealhost_client("http://localhost:8000", token = "YOUR_TOKEN")
+
+create_tool(
+  client,
+  name = "Backoffice",
+  slug = "backoffice",
+  description = "Outil d'administration",
+  module_ids = c(1, 2),
+  enabled = TRUE
+)
+
+create_application(
+  client,
+  name = "Storefront",
+  slug = "storefront",
+  description = "Application e-commerce",
+  module_ids = c(1),
+  enabled = TRUE
+)
+```
+
+
+### SDK Python (tools et applications)
+
+Le SDK Python est disponible dans `sdk/python`.
+
+Exemple rapide :
+
+```python
+from dealhost_sdk import DealHostClient
+
+client = DealHostClient("http://localhost:8000", token="YOUR_TOKEN")
+
+client.create_tool(
+    name="Backoffice",
+    slug="backoffice",
+    description="Outil d'administration",
+    module_ids=[1, 2],
+    enabled=True,
+)
+
+client.create_application(
+    name="Storefront",
+    slug="storefront",
+    description="Application e-commerce",
+    module_ids=[1],
+    enabled=True,
+)
+```
+
+### SDK Rust (tools et applications)
+
+Le SDK Rust est disponible dans `sdk/rust/dealhost-sdk`.
+
+Exemple rapide :
+
+```rust
+use dealhost_sdk::DealHostClient;
+
+fn demo() -> Result<(), reqwest::Error> {
+    let client = DealHostClient::new("http://localhost:8000", Some("YOUR_TOKEN".to_string()));
+
+    client.create_tool("Backoffice", "backoffice", "Outil d'administration", vec![1, 2], true)?;
+    client.create_application("Storefront", "storefront", "Application e-commerce", vec![1], true)?;
+    Ok(())
+}
+```
+
+### Auto découverte des tools et applications
+
+- Les manifests de découverte sont lus depuis:
+  - `manifests/tools/*.json`
+  - `manifests/applications/*.json`
+- Champs attendus: `name`, `slug`, `description` (optionnel), `enabled` (optionnel), `module_slugs` (optionnel), `version` (optionnel, semver), `version_notes` (optionnel).
+- L’auto découverte crée/met à jour automatiquement les objets `Tool` et `HostedApplication`, synchronise leurs liens modules, et enregistre l'historique des versions quand `version` est fourni.
+
+### Internationalisation de l’interface
+
+- L’interface `/hosting/manage/` est traduisible et propose un sélecteur de langue.
+- Langues officielles FAO supportées : **arabe, chinois (simplifié), anglais, français, russe, espagnol**.
+- Fichiers de traduction : `locale/<lang>/LC_MESSAGES/django.po`.
+
+
+### Gestion des versions tools/apps
+
+- Chaque `Tool` et `HostedApplication` expose:
+  - `current_version` (version active),
+  - `released_at` (date de publication),
+  - un historique de versions (`versions`).
+- Endpoints de versionning:
+  - `GET /api/hosting/tools/{id}/versions/`
+  - `POST /api/hosting/tools/{id}/versions/` avec `{ "version": "1.2.3", "notes": "...", "source": "manual" }`
+  - `GET /api/hosting/applications/{id}/versions/`
+  - `POST /api/hosting/applications/{id}/versions/`
+- Filtre de liste disponible: `?current_version=<semver>`.
 
 ### Gestion complète des tools/apps
 
@@ -99,11 +219,21 @@ Upstream modules (containers/services Django)
 
 ## GitHub Workflows
 
-- `CI Django DEALHost` (`.github/workflows/ci.yml`) : installe le projet, vérifie les migrations, exécute les tests Django et un contrôle de compilation.
+- `CI Django DEALHost` (`.github/workflows/ci.yml`) : exécute une matrice multi-plateforme (Linux/macOS/Windows) et multi-versions Python (3.12 à 3.14). Le projet cible Python >=3.13 : les jobs 3.12 sont marqués comme non supportés, et les jobs 3.13/3.14 installent d'abord `requirements.txt` puis le package (`uv pip install --system -r requirements.txt` puis `uv pip install --system -e .`), vérifient les migrations, exécutent les tests unitaires (`uv run python manage.py test tests --verbosity 2`) et le contrôle de compilation.
 - `Validate APISIX Routes` (`.github/workflows/apisix-routes-validate.yml`) : valide la syntaxe JSON des routes APISIX et vérifie la présence d'une route coeur `module-core`.
-- `Pre-commit` (`.github/workflows/pre-commit.yml`) : exécute la suite pre-commit incluant `ruff` en mode `--select ALL` (toutes les règles) et `ruff-format`.
+- `Pre-commit` (`.github/workflows/pre-commit.yml`) : installe `pre-commit` via `uv` puis exécute `uv run pre-commit run --all-files --show-diff-on-failure` (incluant Ruff en mode `--select ALL` et `ruff-format`).
 
 ## Dependency Automation
 
 - `Dependabot` est configuré via `.github/dependabot.yml` pour surveiller chaque semaine les dépendances Python et GitHub Actions.
 - `Renovate` est configuré via `renovate.json` avec preset recommandé, regroupement des updates mineures/patch, et label spécifique pour les majors.
+
+
+## Datasets accessibles dans le dashboard
+
+- Le dashboard `/hosting/manage/` est protégé (utilisateur connecté requis).
+- Les datasets affichés sont filtrés pour l'utilisateur connecté :
+  - accès direct (`dataset.users`)
+  - accès via groupes (`dataset.groups`)
+  - uniquement `enabled=true`.
+- Un superutilisateur voit tous les datasets actifs.

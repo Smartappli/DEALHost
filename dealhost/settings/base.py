@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from django.utils.translation import gettext_lazy as _
+
 from .env import apisix_config, cache_config, github_config
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -18,6 +20,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "apps.hosting",
+    "apps.iam",
     "apps.gateway",
 ]
 
@@ -25,6 +28,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "servestatic.middleware.ServeStaticMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -59,6 +63,15 @@ DATABASES = {
 }
 
 LANGUAGE_CODE = "fr-fr"
+LANGUAGES = [
+    ("ar", _("Arabic")),
+    ("zh-hans", _("Chinese (Simplified)")),
+    ("en", _("English")),
+    ("fr", _("French")),
+    ("ru", _("Russian")),
+    ("es", _("Spanish")),
+]
+LOCALE_PATHS = [BASE_DIR / "locale"]
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
@@ -79,6 +92,15 @@ CACHES = {
         "LOCATION": cache_config().valkey_url,
     }
 }
+
+PASSWORD_HASHERS = [
+    "django.contrib.auth.hashers.Argon2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher",
+    "django.contrib.auth.hashers.BCryptSHA256PasswordHasher",
+    "django.contrib.auth.hashers.ScryptPasswordHasher",
+]
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 GITHUB = github_config()
