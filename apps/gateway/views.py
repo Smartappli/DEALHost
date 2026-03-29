@@ -1,6 +1,7 @@
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.utils.translation import gettext as _
 
 from .services import ApisixService, GitHubService
 
@@ -29,7 +30,7 @@ class PublishRouteView(APIView):
         module_slug = request.data.get("module_slug")
         if not module_slug:
             return Response(
-                {"detail": "module_slug est requis."},
+                {"detail": _("module_slug is required.")},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -48,7 +49,7 @@ class GitHubWebhookView(APIView):
 
         if not github.verify_signature(raw_payload, signature):
             return Response(
-                {"detail": "Signature GitHub invalide."},
+                {"detail": _("Invalid GitHub signature.")},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
 

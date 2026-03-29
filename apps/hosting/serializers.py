@@ -1,5 +1,6 @@
 import re
 
+from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from .models import ApplicationVersion, HostedApplication, Module, Tool, ToolVersion
@@ -116,6 +117,6 @@ class VersionCreateSerializer(serializers.Serializer):
     def validate_version(self, value: str) -> str:
         normalized = value.strip()
         if not re.fullmatch(SEMVER_PATTERN, normalized):
-            msg = "version must follow semantic versioning (ex: 1.2.3 or v1.2.3)"
+            msg = _("Version must follow semantic versioning (example: 1.2.3 or v1.2.3).")
             raise serializers.ValidationError(msg)
         return normalized.lstrip("v")

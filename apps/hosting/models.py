@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 
 class Module(models.Model):
@@ -10,6 +11,10 @@ class Module(models.Model):
     branch = models.CharField(max_length=120, default="main")
     enabled = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = _("Module")
+        verbose_name_plural = _("Modules")
 
     def __str__(self) -> str:
         return f"{self.name} ({self.branch})"
@@ -28,6 +33,10 @@ class Tool(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        verbose_name = _("Tool")
+        verbose_name_plural = _("Tools")
+
     def __str__(self) -> str:
         return self.name
 
@@ -42,6 +51,8 @@ class ToolVersion(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        verbose_name = _("Tool version")
+        verbose_name_plural = _("Tool versions")
         unique_together = ("tool", "version")
         ordering = ("-created_at",)
 
@@ -62,6 +73,10 @@ class HostedApplication(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        verbose_name = _("Application")
+        verbose_name_plural = _("Applications")
+
     def __str__(self) -> str:
         return self.name
 
@@ -80,6 +95,8 @@ class ApplicationVersion(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        verbose_name = _("Application version")
+        verbose_name_plural = _("Application versions")
         unique_together = ("application", "version")
         ordering = ("-created_at",)
 

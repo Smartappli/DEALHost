@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from django.utils.translation import gettext_lazy as _
+
 from .env import apisix_config, cache_config, github_config
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -61,12 +63,12 @@ DATABASES = {
 
 LANGUAGE_CODE = "fr-fr"
 LANGUAGES = [
-    ("ar", "Arabic"),
-    ("zh-hans", "Chinese (Simplified)"),
-    ("en", "English"),
-    ("fr", "French"),
-    ("ru", "Russian"),
-    ("es", "Spanish"),
+    ("ar", _("Arabic")),
+    ("zh-hans", _("Chinese (Simplified)")),
+    ("en", _("English")),
+    ("fr", _("French")),
+    ("ru", _("Russian")),
+    ("es", _("Spanish")),
 ]
 LOCALE_PATHS = [BASE_DIR / "locale"]
 TIME_ZONE = "UTC"

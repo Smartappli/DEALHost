@@ -7,6 +7,7 @@ from pathlib import Path
 
 from django.db import transaction
 from django.utils import timezone
+from django.utils.translation import gettext as _
 
 from .models import HostedApplication, Module, Tool
 
@@ -39,13 +40,16 @@ def _read_manifest(path: Path) -> dict[str, object]:
     data = json.loads(path.read_text(encoding="utf-8"))
     for field in ("name", "slug"):
         if not data.get(field):
-            msg = f"{path}: missing required field '{field}'"
+            msg = _("%(path)s: missing required field '%(field)s'") % {"path": path, "field": field}
             raise ValueError(msg)
     raw_version = data.get("version")
     if raw_version:
         normalized = str(raw_version).strip()
         if not re.fullmatch(SEMVER_PATTERN, normalized):
-            msg = f"{path}: invalid version '{raw_version}', expected semantic version"
+            msg = _("%(path)s: invalid version '%(version)s', expected semantic version") % {
+                "path": path,
+                "version": raw_version,
+            }
             raise ValueError(msg)
         data["version"] = normalized.lstrip("v")
     return data
@@ -102,7 +106,10 @@ def auto_discover_tools_and_applications(manifests_dir: Path | None = None) -> D
             else:
                 report.tools_updated += 1
             if missing:
-                report.errors.append(f"{file_path}: unknown module slugs: {', '.join(missing)}")
+                report.errors.append(
+                    _("%(path)s: unknown module slugs: %(slugs)s")
+                    % {"path": file_path, "slugs": ", ".join(missing)}
+                )
         except (ValueError, json.JSONDecodeError) as exc:
             report.errors.append(str(exc))
 
@@ -138,7 +145,10 @@ def auto_discover_tools_and_applications(manifests_dir: Path | None = None) -> D
             else:
                 report.applications_updated += 1
             if missing:
-                report.errors.append(f"{file_path}: unknown module slugs: {', '.join(missing)}")
+                report.errors.append(
+                    _("%(path)s: unknown module slugs: %(slugs)s")
+                    % {"path": file_path, "slugs": ", ".join(missing)}
+                )
         except (ValueError, json.JSONDecodeError) as exc:
             report.errors.append(str(exc))
 

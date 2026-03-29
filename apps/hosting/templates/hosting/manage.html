@@ -51,7 +51,7 @@
       </thead>
       <tbody>
         {% for module in modules %}
-          <tr><td>{{ module.name }}</td><td>{{ module.slug }}</td><td>{{ module.branch }}</td><td>{{ module.enabled }}</td></tr>
+          <tr><td>{{ module.name }}</td><td>{{ module.slug }}</td><td>{{ module.branch }}</td><td>{% if module.enabled %}{% trans "Yes" %}{% else %}{% trans "No" %}{% endif %}</td></tr>
         {% empty %}
           <tr><td colspan="4">{% trans "No modules" %}</td></tr>
         {% endfor %}
@@ -65,7 +65,7 @@
       </thead>
       <tbody>
         {% for tool in tools %}
-          <tr><td>{{ tool.name }}</td><td>{{ tool.slug }}</td><td>{{ tool.current_version }}</td><td>{% for module in tool.modules.all %}{{ module.slug }}{% if not forloop.last %}, {% endif %}{% empty %}-{% endfor %}</td><td>{{ tool.enabled }}</td></tr>
+          <tr><td>{{ tool.name }}</td><td>{{ tool.slug }}</td><td>{{ tool.current_version }}</td><td>{% for module in tool.modules.all %}{{ module.slug }}{% if not forloop.last %}, {% endif %}{% empty %}-{% endfor %}</td><td>{% if tool.enabled %}{% trans "Yes" %}{% else %}{% trans "No" %}{% endif %}</td></tr>
         {% empty %}
           <tr><td colspan="5">{% trans "No tools" %}</td></tr>
         {% endfor %}
@@ -79,7 +79,7 @@
       </thead>
       <tbody>
         {% for application in applications %}
-          <tr><td>{{ application.name }}</td><td>{{ application.slug }}</td><td>{{ application.current_version }}</td><td>{% for module in application.modules.all %}{{ module.slug }}{% if not forloop.last %}, {% endif %}{% empty %}-{% endfor %}</td><td>{{ application.enabled }}</td></tr>
+          <tr><td>{{ application.name }}</td><td>{{ application.slug }}</td><td>{{ application.current_version }}</td><td>{% for module in application.modules.all %}{{ module.slug }}{% if not forloop.last %}, {% endif %}{% empty %}-{% endfor %}</td><td>{% if application.enabled %}{% trans "Yes" %}{% else %}{% trans "No" %}{% endif %}</td></tr>
         {% empty %}
           <tr><td colspan="5">{% trans "No applications" %}</td></tr>
         {% endfor %}
