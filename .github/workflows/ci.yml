@@ -1,0 +1,41 @@
+name: CI Django DEALHost
+
+on:
+  push:
+    branches: ["main", "work"]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Run migrations check
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Run tests
+        env:
+          DJANGO_SETTINGS_MODULE: dealhost.settings.dev
+          GITHUB_TOKEN: test-token
+          GITHUB_WEBHOOK_SECRET: test-secret
+          APISIX_ADMIN_KEY: test-key
+        run: python manage.py test
+
+      - name: Compile check
+        run: python -m compileall dealhost apps tests

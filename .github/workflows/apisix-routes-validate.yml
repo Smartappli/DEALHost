@@ -1,0 +1,33 @@
+name: Validate APISIX Routes
+
+on:
+  push:
+    paths:
+      - "infra/apisix/**"
+      - ".github/workflows/apisix-routes-validate.yml"
+  pull_request:
+    paths:
+      - "infra/apisix/**"
+
+jobs:
+  validate-routes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate JSON syntax
+        run: python -m json.tool infra/apisix/routes.json > /dev/null
+
+      - name: Ensure core route exists
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          payload = json.loads(Path('infra/apisix/routes.json').read_text())
+          routes = payload.get('routes', [])
+          assert routes, 'No APISIX route found in infra/apisix/routes.json'
+          assert any(route.get('id') == 'module-core' for route in routes), 'Missing module-core route'
+          print('APISIX routes validation passed')
+          PY
