@@ -47,6 +47,20 @@ Upstream modules (containers/services Django)
 - `GET/POST /api/hosting/tools/` : CRUD des outils (chaque outil peut lier plusieurs modules).
 - `GET/POST /api/hosting/applications/` : CRUD des applications hébergées (chaque application peut lier plusieurs modules).
 
+### Gestion complète des tools/apps
+
+- Filtres disponibles sur les listes:
+  - `?enabled=true|false`
+  - `?module_slug=<slug>`
+  - `?search=<texte>` (nom, slug, description, slug module)
+- Actions dédiées:
+  - `POST /api/hosting/tools/{id}/attach-module/` avec `{ "module_id": <id> }`
+  - `POST /api/hosting/tools/{id}/detach-module/` avec `{ "module_id": <id> }`
+  - `GET /api/hosting/tools/{id}/modules/`
+  - `POST /api/hosting/applications/{id}/attach-module/` avec `{ "module_id": <id> }`
+  - `POST /api/hosting/applications/{id}/detach-module/` avec `{ "module_id": <id> }`
+  - `GET /api/hosting/applications/{id}/modules/`
+
 ## Démarrage local
 
 1. Copier les variables d’environnement :
