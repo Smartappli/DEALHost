@@ -1,0 +1,61 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: DEALHost\n"
+"Language: ru\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "DEALHost - Tools/Apps Management"
+msgstr "DEALHost — Управление tools/apps"
+
+msgid "Language"
+msgstr "Язык"
+
+msgid "Apply"
+msgstr "Применить"
+
+msgid "Management interface for modules, tools and applications"
+msgstr "Интерфейс управления модулями, tools и приложениями"
+
+msgid "Autodiscover tools and applications"
+msgstr "Автообнаружение tools и приложений"
+
+msgid "Modules"
+msgstr "Модули"
+
+msgid "Name"
+msgstr "Имя"
+
+msgid "Slug"
+msgstr "Slug"
+
+msgid "Branch"
+msgstr "Ветка"
+
+msgid "Enabled"
+msgstr "Активно"
+
+msgid "No modules"
+msgstr "Нет модулей"
+
+msgid "Tools"
+msgstr "Tools"
+
+msgid "Current version"
+msgstr "Текущая версия"
+
+msgid "No tools"
+msgstr "Нет tools"
+
+msgid "Applications"
+msgstr "Приложения"
+
+msgid "No applications"
+msgstr "Нет приложений"
+
+msgid "Autodiscovery completed: "
+msgstr "Автообнаружение завершено: "
+
+msgid "tools created=%(tools_created)s, tools updated=%(tools_updated)s, apps created=%(apps_created)s, apps updated=%(apps_updated)s, tool versions created=%(tool_versions_created)s, application versions created=%(application_versions_created)s."
+msgstr "tools создано=%(tools_created)s, tools обновлено=%(tools_updated)s, apps создано=%(apps_created)s, apps обновлено=%(apps_updated)s, версий tools создано=%(tool_versions_created)s, версий apps создано=%(application_versions_created)s."

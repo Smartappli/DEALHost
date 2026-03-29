@@ -25,6 +25,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "servestatic.middleware.ServeStaticMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -59,6 +60,15 @@ DATABASES = {
 }
 
 LANGUAGE_CODE = "fr-fr"
+LANGUAGES = [
+    ("ar", "Arabic"),
+    ("zh-hans", "Chinese (Simplified)"),
+    ("en", "English"),
+    ("fr", "French"),
+    ("ru", "Russian"),
+    ("es", "Spanish"),
+]
+LOCALE_PATHS = [BASE_DIR / "locale"]
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True

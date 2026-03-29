@@ -1,0 +1,61 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: DEALHost\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "DEALHost - Tools/Apps Management"
+msgstr "DEALHost - Tools/Apps Management"
+
+msgid "Language"
+msgstr "Language"
+
+msgid "Apply"
+msgstr "Apply"
+
+msgid "Management interface for modules, tools and applications"
+msgstr "Management interface for modules, tools and applications"
+
+msgid "Autodiscover tools and applications"
+msgstr "Autodiscover tools and applications"
+
+msgid "Modules"
+msgstr "Modules"
+
+msgid "Name"
+msgstr "Name"
+
+msgid "Slug"
+msgstr "Slug"
+
+msgid "Branch"
+msgstr "Branch"
+
+msgid "Enabled"
+msgstr "Enabled"
+
+msgid "No modules"
+msgstr "No modules"
+
+msgid "Tools"
+msgstr "Tools"
+
+msgid "Current version"
+msgstr "Current version"
+
+msgid "No tools"
+msgstr "No tools"
+
+msgid "Applications"
+msgstr "Applications"
+
+msgid "No applications"
+msgstr "No applications"
+
+msgid "Autodiscovery completed: "
+msgstr "Autodiscovery completed: "
+
+msgid "tools created=%(tools_created)s, tools updated=%(tools_updated)s, apps created=%(apps_created)s, apps updated=%(apps_updated)s, tool versions created=%(tool_versions_created)s, application versions created=%(application_versions_created)s."
+msgstr "tools created=%(tools_created)s, tools updated=%(tools_updated)s, apps created=%(apps_created)s, apps updated=%(apps_updated)s, tool versions created=%(tool_versions_created)s, application versions created=%(application_versions_created)s."

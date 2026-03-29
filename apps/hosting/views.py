@@ -3,6 +3,7 @@ from pathlib import Path
 from django.contrib import messages
 from django.shortcuts import redirect
 from django.utils import timezone
+from django.utils.translation import gettext as _
 from django.views import View
 from django.views.generic import TemplateView
 from rest_framework import filters, status, viewsets
@@ -189,11 +190,21 @@ class ManagementAutoDiscoverView(View):
         messages.success(
             request,
             (
-                "Auto découverte terminée: "
-                f"tools créés={report.tools_created}, tools mis à jour={report.tools_updated}, "
-                f"apps créées={report.applications_created}, apps mises à jour={report.applications_updated}, "
-                f"versions tools créées={report.tool_versions_created}, "
-                f"versions apps créées={report.application_versions_created}."
+                _("Autodiscovery completed: ")
+                + _(
+                    "tools created=%(tools_created)s, tools updated=%(tools_updated)s, "
+                    "apps created=%(apps_created)s, apps updated=%(apps_updated)s, "
+                    "tool versions created=%(tool_versions_created)s, "
+                    "application versions created=%(application_versions_created)s."
+                )
+                % {
+                    "tools_created": report.tools_created,
+                    "tools_updated": report.tools_updated,
+                    "apps_created": report.applications_created,
+                    "apps_updated": report.applications_updated,
+                    "tool_versions_created": report.tool_versions_created,
+                    "application_versions_created": report.application_versions_created,
+                }
             ),
         )
         for error in report.errors or []:

@@ -1,0 +1,61 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: DEALHost\n"
+"Language: zh_Hans\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "DEALHost - Tools/Apps Management"
+msgstr "DEALHost - 工具/应用管理"
+
+msgid "Language"
+msgstr "语言"
+
+msgid "Apply"
+msgstr "应用"
+
+msgid "Management interface for modules, tools and applications"
+msgstr "模块、工具和应用管理界面"
+
+msgid "Autodiscover tools and applications"
+msgstr "自动发现工具和应用"
+
+msgid "Modules"
+msgstr "模块"
+
+msgid "Name"
+msgstr "名称"
+
+msgid "Slug"
+msgstr "标识"
+
+msgid "Branch"
+msgstr "分支"
+
+msgid "Enabled"
+msgstr "启用"
+
+msgid "No modules"
+msgstr "暂无模块"
+
+msgid "Tools"
+msgstr "工具"
+
+msgid "Current version"
+msgstr "当前版本"
+
+msgid "No tools"
+msgstr "暂无工具"
+
+msgid "Applications"
+msgstr "应用"
+
+msgid "No applications"
+msgstr "暂无应用"
+
+msgid "Autodiscovery completed: "
+msgstr "自动发现完成："
+
+msgid "tools created=%(tools_created)s, tools updated=%(tools_updated)s, apps created=%(apps_created)s, apps updated=%(apps_updated)s, tool versions created=%(tool_versions_created)s, application versions created=%(application_versions_created)s."
+msgstr "已创建工具=%(tools_created)s，已更新工具=%(tools_updated)s，已创建应用=%(apps_created)s，已更新应用=%(apps_updated)s，已创建工具版本=%(tool_versions_created)s，已创建应用版本=%(application_versions_created)s。"

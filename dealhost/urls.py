@@ -5,6 +5,7 @@ from apps.hosting.views import ManagementAutoDiscoverView, ManagementInterfaceVi
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("i18n/", include("django.conf.urls.i18n")),
     path("api/hosting/", include("apps.hosting.urls")),
     path("api/gateway/", include("apps.gateway.urls")),
     path("hosting/manage/", ManagementInterfaceView.as_view(), name="hosting-management"),

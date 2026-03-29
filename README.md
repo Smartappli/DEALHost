@@ -48,6 +48,7 @@ Upstream modules (containers/services Django)
 - `GET/POST /api/hosting/applications/` : CRUD des applications hébergées (chaque application peut lier plusieurs modules).
 - `POST /api/hosting/autodiscover/` : auto découverte depuis les manifests tools/apps.
 - `GET /hosting/manage/` : interface de gestion (tableaux modules, tools, applications + déclenchement auto découverte).
+- `POST /i18n/setlang/` : changement de langue de l’interface de gestion.
 
 
 ### Auto découverte des tools et applications
@@ -57,6 +58,12 @@ Upstream modules (containers/services Django)
   - `manifests/applications/*.json`
 - Champs attendus: `name`, `slug`, `description` (optionnel), `enabled` (optionnel), `module_slugs` (optionnel), `version` (optionnel, semver), `version_notes` (optionnel).
 - L’auto découverte crée/met à jour automatiquement les objets `Tool` et `HostedApplication`, synchronise leurs liens modules, et enregistre l'historique des versions quand `version` est fourni.
+
+### Internationalisation de l’interface
+
+- L’interface `/hosting/manage/` est traduisible et propose un sélecteur de langue.
+- Langues officielles FAO supportées : **arabe, chinois (simplifié), anglais, français, russe, espagnol**.
+- Fichiers de traduction : `locale/<lang>/LC_MESSAGES/django.po`.
 
 
 ### Gestion des versions tools/apps
