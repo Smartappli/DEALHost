@@ -44,6 +44,8 @@ Upstream modules (containers/services Django)
 - `POST /api/gateway/apisix/publish/` : crée/met à jour une route APISIX.
 - `POST /api/gateway/github/webhook/` : webhook signé GitHub -> publication de route.
 - `GET/POST /api/hosting/modules/` : CRUD des modules hébergés.
+- `GET/POST /api/hosting/tools/` : CRUD des outils (chaque outil peut lier plusieurs modules).
+- `GET/POST /api/hosting/applications/` : CRUD des applications hébergées (chaque application peut lier plusieurs modules).
 
 ## Démarrage local
 
