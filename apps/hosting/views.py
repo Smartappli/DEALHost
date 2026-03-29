@@ -1,11 +1,13 @@
 from pathlib import Path
 
 from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.views import View
 from django.views.generic import TemplateView
+from django.db.models import Q
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.request import Request
@@ -13,7 +15,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .discovery import auto_discover_tools_and_applications
-from .models import HostedApplication, Module, Tool
+from .models import Dataset, HostedApplication, Module, Tool
 from .serializers import (
     ApplicationVersionSerializer,
     HostedApplicationSerializer,
@@ -172,7 +174,7 @@ class AutoDiscoverView(APIView):
         return Response(report.to_dict(), status=status.HTTP_200_OK)
 
 
-class ManagementInterfaceView(TemplateView):
+class ManagementInterfaceView(LoginRequiredMixin, TemplateView):
     template_name = "hosting/manage.html"
 
     def get_context_data(self, **kwargs: object) -> dict[str, object]:
@@ -180,6 +182,12 @@ class ManagementInterfaceView(TemplateView):
         context["modules"] = Module.objects.all().order_by("name")
         context["tools"] = Tool.objects.prefetch_related("modules").all().order_by("name")
         context["applications"] = HostedApplication.objects.prefetch_related("modules").all().order_by("name")
+
+        user = self.request.user
+        datasets = Dataset.objects.prefetch_related("modules").filter(enabled=True)
+        if not user.is_superuser:
+            datasets = datasets.filter(Q(users=user) | Q(groups__in=user.groups.all())).distinct()
+        context["datasets"] = datasets.order_by("name")
         return context
 
 

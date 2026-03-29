@@ -72,6 +72,31 @@
       </tbody>
     </table>
 
+
+    <h2>{% trans "Accessible datasets (logged user)" %}</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>{% trans "Name" %}</th>
+          <th>{% trans "Slug" %}</th>
+          <th>{% trans "Description" %}</th>
+          <th>{% trans "Modules" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for dataset in datasets %}
+          <tr>
+            <td>{{ dataset.name }}</td>
+            <td>{{ dataset.slug }}</td>
+            <td>{{ dataset.description|default:"-" }}</td>
+            <td>{% for module in dataset.modules.all %}{{ module.slug }}{% if not forloop.last %}, {% endif %}{% empty %}-{% endfor %}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="4">{% trans "No accessible datasets" %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
     <h2>{% trans "Applications" %}</h2>
     <table>
       <thead>

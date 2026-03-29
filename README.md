@@ -47,7 +47,7 @@ Upstream modules (containers/services Django)
 - `GET/POST /api/hosting/tools/` : CRUD des outils (chaque outil peut lier plusieurs modules).
 - `GET/POST /api/hosting/applications/` : CRUD des applications hébergées (chaque application peut lier plusieurs modules).
 - `POST /api/hosting/autodiscover/` : auto découverte depuis les manifests tools/apps.
-- `GET /hosting/manage/` : interface de gestion (tableaux modules, tools, applications + déclenchement auto découverte).
+- `GET /hosting/manage/` : interface de gestion (modules, tools, datasets accessibles à l'utilisateur connecté, applications + auto découverte).
 - `POST /i18n/setlang/` : changement de langue de l’interface de gestion.
 - `GET/POST /api/iam/users/` : gestion des utilisateurs (avec groupes/permissions + endpoint `set-password`).
 - `GET/POST /api/iam/groups/` : gestion des groupes (rôles) et permissions associées.
@@ -227,3 +227,13 @@ fn demo() -> Result<(), reqwest::Error> {
 
 - `Dependabot` est configuré via `.github/dependabot.yml` pour surveiller chaque semaine les dépendances Python et GitHub Actions.
 - `Renovate` est configuré via `renovate.json` avec preset recommandé, regroupement des updates mineures/patch, et label spécifique pour les majors.
+
+
+## Datasets accessibles dans le dashboard
+
+- Le dashboard `/hosting/manage/` est protégé (utilisateur connecté requis).
+- Les datasets affichés sont filtrés pour l'utilisateur connecté :
+  - accès direct (`dataset.users`)
+  - accès via groupes (`dataset.groups`)
+  - uniquement `enabled=true`.
+- Un superutilisateur voit tous les datasets actifs.

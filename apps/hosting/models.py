@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -102,3 +103,23 @@ class ApplicationVersion(models.Model):
 
     def __str__(self) -> str:
         return f"{self.application.slug}@{self.version}"
+
+
+class Dataset(models.Model):
+    """Jeu de données accessible selon les droits utilisateur/groupe."""
+
+    name = models.CharField(max_length=120, unique=True)
+    slug = models.SlugField(max_length=120, unique=True)
+    description = models.TextField(blank=True)
+    modules = models.ManyToManyField(Module, related_name="datasets", blank=True)
+    users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name="datasets", blank=True)
+    groups = models.ManyToManyField("auth.Group", related_name="datasets", blank=True)
+    enabled = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = _("Dataset")
+        verbose_name_plural = _("Datasets")
+
+    def __str__(self) -> str:
+        return self.name

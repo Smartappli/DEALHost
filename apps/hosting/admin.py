@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import ApplicationVersion, HostedApplication, Module, Tool, ToolVersion
+from .models import ApplicationVersion, Dataset, HostedApplication, Module, Tool, ToolVersion
 
 
 @admin.register(Module)
@@ -40,3 +40,11 @@ class HostedApplicationAdmin(admin.ModelAdmin):
     search_fields = ("name", "slug", "description", "current_version")
     filter_horizontal = ("modules",)
     inlines = [ApplicationVersionInline]
+
+
+@admin.register(Dataset)
+class DatasetAdmin(admin.ModelAdmin):
+    list_display = ("name", "slug", "enabled", "created_at")
+    list_filter = ("enabled",)
+    search_fields = ("name", "slug", "description")
+    filter_horizontal = ("modules", "users", "groups")
