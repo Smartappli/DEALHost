@@ -54,8 +54,6 @@ Upstream modules (containers/services Django)
 - `GET /api/iam/permissions/` : catalogue des permissions Django.
 - `GET /iam/manage/` : interface IAM (utilisateurs, groupes, permissions).
 
-
-
 ### SDK R (tools et applications)
 
 Un SDK R minimal est disponible dans `sdk/r/dealhostR` pour piloter l’API hosting.
@@ -219,7 +217,8 @@ fn demo() -> Result<(), reqwest::Error> {
 
 ## GitHub Workflows
 
-- `CI Django DEALHost` (`.github/workflows/ci.yml`) : exécute une matrice multi-plateforme (Linux/macOS/Windows) et multi-versions Python (3.12 à 3.14). Le projet cible Python >=3.12 : les jobs 3.12/3.13/3.14 installent d'abord `requirements.txt` puis le package (`uv pip install --system -r requirements.txt` puis `uv pip install --system -e .`), vérifient les migrations, exécutent les tests unitaires (`uv run python manage.py test tests --verbosity 2`) et le contrôle de compilation.
+- `CI Django DEALHost` (`.github/workflows/ci.yml`) : exécute une matrice multi-plateforme (Linux/macOS/Windows) et multi-versions Python (3.12 à 3.14). Le projet cible Python >=3.12 : les jobs 3.12/3.13/3.14 installent d'abord `requirements.txt` puis le package (`uv pip install --system -r requirements.txt` puis `uv pip install --system -e .`), vérifient les migrations, exécutent les tests unitaires sous couverture (`uv run coverage run --source=apps,dealhost,sdk manage.py test tests --verbosity 2`), exportent `coverage.xml` et lancent le contrôle de compilation.
+- `SonarCloud` (`.github/workflows/sonarcloud.yml`) : exécute les tests avec couverture sur Ubuntu + Python 3.12 puis lance l'analyse SonarCloud (`SonarSource/sonarqube-scan-action@v6`) à partir du fichier `sonar-project.properties`.
 - `Validate APISIX Routes` (`.github/workflows/apisix-routes-validate.yml`) : valide la syntaxe JSON des routes APISIX et vérifie la présence d'une route coeur `module-core`.
 - `Pre-commit` (`.github/workflows/pre-commit.yml`) : installe `pre-commit` via `uv` puis exécute `uv run pre-commit run --all-files --show-diff-on-failure` (incluant Ruff en mode `--select ALL` et `ruff-format`).
 

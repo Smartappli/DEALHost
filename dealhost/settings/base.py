@@ -4,10 +4,10 @@ from pathlib import Path
 
 from django.utils.translation import gettext_lazy as _
 
-from .env import apisix_config, cache_config, github_config
+from .env import apisix_config, cache_config, get_env, github_config
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
-SECRET_KEY = "django-insecure-change-me"
+SECRET_KEY = get_env("DJANGO_SECRET_KEY", "replace-me")
 DEBUG = False
 ALLOWED_HOSTS = ["*"]
 
