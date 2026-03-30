@@ -54,8 +54,6 @@ Upstream modules (containers/services Django)
 - `GET /api/iam/permissions/` : catalogue des permissions Django.
 - `GET /iam/manage/` : interface IAM (utilisateurs, groupes, permissions).
 
-
-
 ### SDK R (tools et applications)
 
 Un SDK R minimal est disponible dans `sdk/r/dealhostR` pour piloter l’API hosting.
