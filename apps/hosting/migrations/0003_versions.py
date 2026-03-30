@@ -40,14 +40,26 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="ToolVersion",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
                 ("version", models.CharField(max_length=32)),
                 ("notes", models.TextField(blank=True)),
                 ("source", models.CharField(default="manual", max_length=32)),
                 ("created_at", models.DateTimeField(auto_now_add=True)),
                 (
                     "tool",
-                    models.ForeignKey(on_delete=models.deletion.CASCADE, related_name="versions", to="hosting.tool"),
+                    models.ForeignKey(
+                        on_delete=models.deletion.CASCADE,
+                        related_name="versions",
+                        to="hosting.tool",
+                    ),
                 ),
             ],
             options={
@@ -58,7 +70,15 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="ApplicationVersion",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
                 ("version", models.CharField(max_length=32)),
                 ("notes", models.TextField(blank=True)),
                 ("source", models.CharField(default="manual", max_length=32)),

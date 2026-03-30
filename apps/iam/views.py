@@ -18,10 +18,19 @@ User = get_user_model()
 
 
 class PermissionViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Permission.objects.select_related("content_type").all().order_by("content_type__app_label", "codename")
+    queryset = (
+        Permission.objects.select_related("content_type")
+        .all()
+        .order_by("content_type__app_label", "codename")
+    )
     serializer_class = PermissionSerializer
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ["name", "codename", "content_type__app_label", "content_type__model"]
+    search_fields = [
+        "name",
+        "codename",
+        "content_type__app_label",
+        "content_type__model",
+    ]
     ordering_fields = ["name", "codename", "content_type__app_label"]
 
 
@@ -34,7 +43,11 @@ class GroupViewSet(viewsets.ModelViewSet):
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.prefetch_related("groups", "user_permissions").all().order_by("username")
+    queryset = (
+        User.objects.prefetch_related("groups", "user_permissions")
+        .all()
+        .order_by("username")
+    )
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["username", "email", "first_name", "last_name"]
     ordering_fields = ["username", "email", "date_joined", "last_login"]
@@ -59,9 +72,15 @@ class IamManagementInterfaceView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["users"] = User.objects.prefetch_related("groups").all().order_by("username")
-        context["groups"] = Group.objects.prefetch_related("permissions").all().order_by("name")
-        context["permissions"] = Permission.objects.select_related("content_type").all().order_by(
-            "content_type__app_label", "codename"
+        context["users"] = (
+            User.objects.prefetch_related("groups").all().order_by("username")
+        )
+        context["groups"] = (
+            Group.objects.prefetch_related("permissions").all().order_by("name")
+        )
+        context["permissions"] = (
+            Permission.objects.select_related("content_type")
+            .all()
+            .order_by("content_type__app_label", "codename")
         )
         return context

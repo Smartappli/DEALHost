@@ -59,7 +59,7 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
-    }
+    },
 }
 
 LANGUAGE_CODE = "fr-fr"
@@ -81,7 +81,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 STORAGES = {
     "staticfiles": {
         "BACKEND": "servestatic.storage.CompressedManifestStaticFilesStorage",
-    }
+    },
 }
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
@@ -90,7 +90,7 @@ CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
         "LOCATION": cache_config().valkey_url,
-    }
+    },
 }
 
 PASSWORD_HASHERS = [

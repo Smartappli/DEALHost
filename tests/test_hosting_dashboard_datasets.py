@@ -11,14 +11,26 @@ class HostingDashboardDatasetsTests(TestCase):
         user = User.objects.create_user(username="alice", password="secret")
         user.groups.add(group)
 
-        direct_dataset = Dataset.objects.create(name="Direct", slug="direct", enabled=True)
+        direct_dataset = Dataset.objects.create(
+            name="Direct",
+            slug="direct",
+            enabled=True,
+        )
         direct_dataset.users.add(user)
 
         group_dataset = Dataset.objects.create(name="Group", slug="group", enabled=True)
         group_dataset.groups.add(group)
 
-        private_dataset = Dataset.objects.create(name="Private", slug="private", enabled=True)
-        hidden_dataset = Dataset.objects.create(name="Hidden", slug="hidden", enabled=False)
+        private_dataset = Dataset.objects.create(
+            name="Private",
+            slug="private",
+            enabled=True,
+        )
+        hidden_dataset = Dataset.objects.create(
+            name="Hidden",
+            slug="hidden",
+            enabled=False,
+        )
         hidden_dataset.users.add(user)
 
         self.client.login(username="alice", password="secret")

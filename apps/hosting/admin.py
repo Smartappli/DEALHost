@@ -1,6 +1,13 @@
 from django.contrib import admin
 
-from .models import ApplicationVersion, Dataset, HostedApplication, Module, Tool, ToolVersion
+from .models import (
+    ApplicationVersion,
+    Dataset,
+    HostedApplication,
+    Module,
+    Tool,
+    ToolVersion,
+)
 
 
 @admin.register(Module)
@@ -19,7 +26,14 @@ class ToolVersionInline(admin.TabularInline):
 
 @admin.register(Tool)
 class ToolAdmin(admin.ModelAdmin):
-    list_display = ("name", "slug", "current_version", "released_at", "enabled", "created_at")
+    list_display = (
+        "name",
+        "slug",
+        "current_version",
+        "released_at",
+        "enabled",
+        "created_at",
+    )
     list_filter = ("enabled", "current_version")
     search_fields = ("name", "slug", "description", "current_version")
     filter_horizontal = ("modules",)
@@ -35,7 +49,14 @@ class ApplicationVersionInline(admin.TabularInline):
 
 @admin.register(HostedApplication)
 class HostedApplicationAdmin(admin.ModelAdmin):
-    list_display = ("name", "slug", "current_version", "released_at", "enabled", "created_at")
+    list_display = (
+        "name",
+        "slug",
+        "current_version",
+        "released_at",
+        "enabled",
+        "created_at",
+    )
     list_filter = ("enabled", "current_version")
     search_fields = ("name", "slug", "description", "current_version")
     filter_horizontal = ("modules",)

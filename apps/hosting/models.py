@@ -112,7 +112,11 @@ class Dataset(models.Model):
     slug = models.SlugField(max_length=120, unique=True)
     description = models.TextField(blank=True)
     modules = models.ManyToManyField(Module, related_name="datasets", blank=True)
-    users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name="datasets", blank=True)
+    users = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name="datasets",
+        blank=True,
+    )
     groups = models.ManyToManyField("auth.Group", related_name="datasets", blank=True)
     enabled = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)

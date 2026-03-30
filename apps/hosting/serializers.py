@@ -117,6 +117,8 @@ class VersionCreateSerializer(serializers.Serializer):
     def validate_version(self, value: str) -> str:
         normalized = value.strip()
         if not re.fullmatch(SEMVER_PATTERN, normalized):
-            msg = _("Version must follow semantic versioning (example: 1.2.3 or v1.2.3).")
+            msg = _(
+                "Version must follow semantic versioning (example: 1.2.3 or v1.2.3).",
+            )
             raise serializers.ValidationError(msg)
         return normalized.lstrip("v")

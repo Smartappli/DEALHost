@@ -13,7 +13,7 @@ from dealhost.settings.env import GitHubConfig
         repository="smartappli",
         token="token",
         webhook_secret="secret-test",
-    )
+    ),
 )
 class GitHubServiceTests(SimpleTestCase):
     def test_verify_signature_true(self):

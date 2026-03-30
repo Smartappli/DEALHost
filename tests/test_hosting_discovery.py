@@ -29,7 +29,7 @@ class HostingDiscoveryTests(TestCase):
                         "description": "Tool for operations",
                         "module_slugs": ["module-core"],
                         "version": "1.0.0",
-                    }
+                    },
                 ),
                 encoding="utf-8",
             )
@@ -41,7 +41,7 @@ class HostingDiscoveryTests(TestCase):
                         "description": "Customer app",
                         "module_slugs": ["module-core"],
                         "version": "2.1.0",
-                    }
+                    },
                 ),
                 encoding="utf-8",
             )
@@ -72,7 +72,7 @@ class HostingDiscoveryTests(TestCase):
                         "slug": "broken-tool",
                         "module_slugs": ["missing-module"],
                         "version": "1.4.2",
-                    }
+                    },
                 ),
                 encoding="utf-8",
             )
@@ -95,7 +95,7 @@ class HostingDiscoveryTests(TestCase):
                         "name": "BadVersion",
                         "slug": "bad-version",
                         "version": "release-1",
-                    }
+                    },
                 ),
                 encoding="utf-8",
             )
