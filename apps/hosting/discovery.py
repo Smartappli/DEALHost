@@ -50,7 +50,7 @@ def _read_manifest(path: Path) -> dict[str, object]:
         normalized = str(raw_version).strip()
         if not re.fullmatch(SEMVER_PATTERN, normalized):
             msg = _(
-                "%(path)s: invalid version '%(version)s', expected semantic version"
+                "%(path)s: invalid version '%(version)s', expected semantic version",
             ) % {
                 "path": path,
                 "version": raw_version,
@@ -99,7 +99,7 @@ def auto_discover_tools_and_applications(
                 tool.current_version = str(version)
                 tool.released_at = timezone.now()
                 tool.save(
-                    update_fields=["current_version", "released_at", "updated_at"]
+                    update_fields=["current_version", "released_at", "updated_at"],
                 )
                 version_created = tool.versions.update_or_create(
                     version=str(version),
@@ -117,7 +117,7 @@ def auto_discover_tools_and_applications(
             if missing:
                 report.errors.append(
                     _("%(path)s: unknown module slugs: %(slugs)s")
-                    % {"path": file_path, "slugs": ", ".join(missing)}
+                    % {"path": file_path, "slugs": ", ".join(missing)},
                 )
         except (ValueError, json.JSONDecodeError) as exc:
             report.errors.append(str(exc))
@@ -140,7 +140,7 @@ def auto_discover_tools_and_applications(
                 application.current_version = str(version)
                 application.released_at = timezone.now()
                 application.save(
-                    update_fields=["current_version", "released_at", "updated_at"]
+                    update_fields=["current_version", "released_at", "updated_at"],
                 )
                 version_created = application.versions.update_or_create(
                     version=str(version),
@@ -158,7 +158,7 @@ def auto_discover_tools_and_applications(
             if missing:
                 report.errors.append(
                     _("%(path)s: unknown module slugs: %(slugs)s")
-                    % {"path": file_path, "slugs": ", ".join(missing)}
+                    % {"path": file_path, "slugs": ", ".join(missing)},
                 )
         except (ValueError, json.JSONDecodeError) as exc:
             report.errors.append(str(exc))

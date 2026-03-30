@@ -12,7 +12,9 @@ class HostingDashboardDatasetsTests(TestCase):
         user.groups.add(group)
 
         direct_dataset = Dataset.objects.create(
-            name="Direct", slug="direct", enabled=True,
+            name="Direct",
+            slug="direct",
+            enabled=True,
         )
         direct_dataset.users.add(user)
 
@@ -20,10 +22,14 @@ class HostingDashboardDatasetsTests(TestCase):
         group_dataset.groups.add(group)
 
         private_dataset = Dataset.objects.create(
-            name="Private", slug="private", enabled=True,
+            name="Private",
+            slug="private",
+            enabled=True,
         )
         hidden_dataset = Dataset.objects.create(
-            name="Hidden", slug="hidden", enabled=False,
+            name="Hidden",
+            slug="hidden",
+            enabled=False,
         )
         hidden_dataset.users.add(user)
 

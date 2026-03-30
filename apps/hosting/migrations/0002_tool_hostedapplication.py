@@ -27,7 +27,9 @@ class Migration(migrations.Migration):
                 (
                     "modules",
                     models.ManyToManyField(
-                        blank=True, related_name="tools", to="hosting.module"
+                        blank=True,
+                        related_name="tools",
+                        to="hosting.module",
                     ),
                 ),
             ],
@@ -52,7 +54,9 @@ class Migration(migrations.Migration):
                 (
                     "modules",
                     models.ManyToManyField(
-                        blank=True, related_name="applications", to="hosting.module"
+                        blank=True,
+                        related_name="applications",
+                        to="hosting.module",
                     ),
                 ),
             ],

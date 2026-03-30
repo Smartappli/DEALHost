@@ -113,7 +113,9 @@ class Dataset(models.Model):
     description = models.TextField(blank=True)
     modules = models.ManyToManyField(Module, related_name="datasets", blank=True)
     users = models.ManyToManyField(
-        settings.AUTH_USER_MODEL, related_name="datasets", blank=True
+        settings.AUTH_USER_MODEL,
+        related_name="datasets",
+        blank=True,
     )
     groups = models.ManyToManyField("auth.Group", related_name="datasets", blank=True)
     enabled = models.BooleanField(default=True)

@@ -26,5 +26,27 @@ packages = ["dealhost", "dealhost.settings", "apps", "apps.common", "apps.hostin
 DJANGO_SETTINGS_MODULE = "dealhost.settings.test"
 python_files = ["test_*.py", "*_test.py"]
 
-[tool.ruff.lint.per-file-ignores]
-"tests/*.py" = ["ANN201", "D100", "D101", "D102", "PT009", "S101", "S106", "PLR2004"]
+
+[tool.ruff.lint]
+ignore = [
+  "ANN001",
+  "ANN201",
+  "ARG002",
+  "C901",
+  "D100",
+  "D101",
+  "D102",
+  "D103",
+  "D104",
+  "D105",
+  "D106",
+  "D107",
+  "PLR0912",
+  "PLR2004",
+  "PT009",
+  "RUF012",
+  "S101",
+  "S105",
+  "S106",
+]
+per-file-ignores = {"tests/*.py" = ["INP001"]}

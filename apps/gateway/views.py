@@ -1,7 +1,7 @@
+from django.utils.translation import gettext as _
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.utils.translation import gettext as _
 
 from .services import ApisixService, GitHubService
 
@@ -21,7 +21,7 @@ class SyncGitHubView(APIView):
                 "branch": branch,
                 "sha": commit["sha"],
                 "message": commit["commit"]["message"],
-            }
+            },
         )
 
 

@@ -7,7 +7,10 @@ import httpx
 
 class DealHostClient:
     def __init__(
-        self, base_url: str, token: str | None = None, timeout: float = 30.0
+        self,
+        base_url: str,
+        token: str | None = None,
+        timeout: float = 30.0,
     ) -> None:
         self.base_url = base_url.rstrip("/")
         self.token = token
@@ -26,7 +29,9 @@ class DealHostClient:
             headers["Authorization"] = f"Bearer {self.token}"
 
         with httpx.Client(
-            base_url=self.base_url, timeout=self.timeout, headers=headers
+            base_url=self.base_url,
+            timeout=self.timeout,
+            headers=headers,
         ) as client:
             response = client.request(method=method, url=path, json=json, params=params)
             response.raise_for_status()
@@ -75,7 +80,10 @@ class DealHostClient:
         )
 
     def list_tools(
-        self, *, enabled: bool | None = None, module_slug: str | None = None
+        self,
+        *,
+        enabled: bool | None = None,
+        module_slug: str | None = None,
     ) -> Any:
         params: dict[str, Any] = {}
         if enabled is not None:
@@ -85,7 +93,10 @@ class DealHostClient:
         return self._request("GET", "/api/hosting/tools/", params=params)
 
     def list_applications(
-        self, *, enabled: bool | None = None, module_slug: str | None = None
+        self,
+        *,
+        enabled: bool | None = None,
+        module_slug: str | None = None,
     ) -> Any:
         params: dict[str, Any] = {}
         if enabled is not None:

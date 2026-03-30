@@ -29,19 +29,25 @@ class Migration(migrations.Migration):
                 (
                     "groups",
                     models.ManyToManyField(
-                        blank=True, related_name="datasets", to="auth.group"
+                        blank=True,
+                        related_name="datasets",
+                        to="auth.group",
                     ),
                 ),
                 (
                     "modules",
                     models.ManyToManyField(
-                        blank=True, related_name="datasets", to="hosting.module"
+                        blank=True,
+                        related_name="datasets",
+                        to="hosting.module",
                     ),
                 ),
                 (
                     "users",
                     models.ManyToManyField(
-                        blank=True, related_name="datasets", to=settings.AUTH_USER_MODEL
+                        blank=True,
+                        related_name="datasets",
+                        to=settings.AUTH_USER_MODEL,
                     ),
                 ),
             ],

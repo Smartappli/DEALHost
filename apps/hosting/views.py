@@ -2,12 +2,12 @@ from pathlib import Path
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Q
 from django.shortcuts import redirect
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.views import View
 from django.views.generic import TemplateView
-from django.db.models import Q
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.request import Request
@@ -108,7 +108,8 @@ class ToolViewSet(viewsets.ModelViewSet):
             },
         )
         return Response(
-            ToolVersionSerializer(version_obj).data, status=status.HTTP_201_CREATED
+            ToolVersionSerializer(version_obj).data,
+            status=status.HTTP_201_CREATED,
         )
 
 
@@ -143,7 +144,8 @@ class HostedApplicationViewSet(viewsets.ModelViewSet):
         application = self.get_object()
         application.modules.add(serializer.validated_data["module"])
         return Response(
-            self.get_serializer(application).data, status=status.HTTP_200_OK
+            self.get_serializer(application).data,
+            status=status.HTTP_200_OK,
         )
 
     @action(detail=True, methods=["post"], url_path="detach-module")
@@ -153,7 +155,8 @@ class HostedApplicationViewSet(viewsets.ModelViewSet):
         application = self.get_object()
         application.modules.remove(serializer.validated_data["module"])
         return Response(
-            self.get_serializer(application).data, status=status.HTTP_200_OK
+            self.get_serializer(application).data,
+            status=status.HTTP_200_OK,
         )
 
     @action(detail=True, methods=["get"], url_path="modules")
@@ -169,7 +172,8 @@ class HostedApplicationViewSet(viewsets.ModelViewSet):
         application = self.get_object()
         if request.method == "GET":
             data = ApplicationVersionSerializer(
-                application.versions.all(), many=True
+                application.versions.all(),
+                many=True,
             ).data
             return Response(data, status=status.HTTP_200_OK)
 
@@ -214,7 +218,7 @@ class ManagementInterfaceView(LoginRequiredMixin, TemplateView):
         datasets = Dataset.objects.prefetch_related("modules").filter(enabled=True)
         if not user.is_superuser:
             datasets = datasets.filter(
-                Q(users=user) | Q(groups__in=user.groups.all())
+                Q(users=user) | Q(groups__in=user.groups.all()),
             ).distinct()
         context["datasets"] = datasets.order_by("name")
         return context
@@ -232,7 +236,7 @@ class ManagementAutoDiscoverView(View):
                     "tools created=%(tools_created)s, tools updated=%(tools_updated)s, "
                     "apps created=%(apps_created)s, apps updated=%(apps_updated)s, "
                     "tool versions created=%(tool_versions_created)s, "
-                    "application versions created=%(application_versions_created)s."
+                    "application versions created=%(application_versions_created)s.",
                 )
                 % {
                     "tools_created": report.tools_created,
