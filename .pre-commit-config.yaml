@@ -22,4 +22,4 @@ repos:
     rev: v2.4.1
     hooks:
       - id: codespell
-        args: ["--skip", "*.po,*.lock"]
+        args: ["--skip", "*.po,*.lock", "--ignore-words-list", "registre,exemple,branche,groupes,Fonctions,Exemple,objets,liens,versionning,servie,persistant,environnement,persistance,projet,valide,syntaxe,installe,groupe"]

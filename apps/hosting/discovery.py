@@ -40,13 +40,18 @@ def _read_manifest(path: Path) -> dict[str, object]:
     data = json.loads(path.read_text(encoding="utf-8"))
     for field in ("name", "slug"):
         if not data.get(field):
-            msg = _("%(path)s: missing required field '%(field)s'") % {"path": path, "field": field}
+            msg = _("%(path)s: missing required field '%(field)s'") % {
+                "path": path,
+                "field": field,
+            }
             raise ValueError(msg)
     raw_version = data.get("version")
     if raw_version:
         normalized = str(raw_version).strip()
         if not re.fullmatch(SEMVER_PATTERN, normalized):
-            msg = _("%(path)s: invalid version '%(version)s', expected semantic version") % {
+            msg = _(
+                "%(path)s: invalid version '%(version)s', expected semantic version"
+            ) % {
                 "path": path,
                 "version": raw_version,
             }
@@ -70,7 +75,9 @@ def _extract_modules(payload: dict[str, object]) -> tuple[list[Module], list[str
 
 
 @transaction.atomic
-def auto_discover_tools_and_applications(manifests_dir: Path | None = None) -> DiscoveryReport:
+def auto_discover_tools_and_applications(
+    manifests_dir: Path | None = None,
+) -> DiscoveryReport:
     base = manifests_dir or Path("manifests")
     report = DiscoveryReport(errors=[])
 
@@ -91,7 +98,9 @@ def auto_discover_tools_and_applications(manifests_dir: Path | None = None) -> D
             if version:
                 tool.current_version = str(version)
                 tool.released_at = timezone.now()
-                tool.save(update_fields=["current_version", "released_at", "updated_at"])
+                tool.save(
+                    update_fields=["current_version", "released_at", "updated_at"]
+                )
                 _, version_created = tool.versions.update_or_create(
                     version=str(version),
                     defaults={
@@ -130,7 +139,9 @@ def auto_discover_tools_and_applications(manifests_dir: Path | None = None) -> D
             if version:
                 application.current_version = str(version)
                 application.released_at = timezone.now()
-                application.save(update_fields=["current_version", "released_at", "updated_at"])
+                application.save(
+                    update_fields=["current_version", "released_at", "updated_at"]
+                )
                 _, version_created = application.versions.update_or_create(
                     version=str(version),
                     defaults={

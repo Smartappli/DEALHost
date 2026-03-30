@@ -43,7 +43,9 @@ class ModuleViewSet(viewsets.ModelViewSet):
 
 
 class ToolViewSet(viewsets.ModelViewSet):
-    queryset = Tool.objects.prefetch_related("modules", "versions").all().order_by("name")
+    queryset = (
+        Tool.objects.prefetch_related("modules", "versions").all().order_by("name")
+    )
     serializer_class = ToolSerializer
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["name", "slug", "description", "modules__slug", "current_version"]
@@ -81,7 +83,10 @@ class ToolViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["get"], url_path="modules")
     def modules(self, request: Request, pk: str | None = None) -> Response:
         tool = self.get_object()
-        return Response(ModuleSerializer(tool.modules.all(), many=True).data, status=status.HTTP_200_OK)
+        return Response(
+            ModuleSerializer(tool.modules.all(), many=True).data,
+            status=status.HTTP_200_OK,
+        )
 
     @action(detail=True, methods=["get", "post"], url_path="versions")
     def versions(self, request: Request, pk: str | None = None) -> Response:
@@ -102,11 +107,17 @@ class ToolViewSet(viewsets.ModelViewSet):
                 "source": serializer.validated_data.get("source", "manual"),
             },
         )
-        return Response(ToolVersionSerializer(version_obj).data, status=status.HTTP_201_CREATED)
+        return Response(
+            ToolVersionSerializer(version_obj).data, status=status.HTTP_201_CREATED
+        )
 
 
 class HostedApplicationViewSet(viewsets.ModelViewSet):
-    queryset = HostedApplication.objects.prefetch_related("modules", "versions").all().order_by("name")
+    queryset = (
+        HostedApplication.objects.prefetch_related("modules", "versions")
+        .all()
+        .order_by("name")
+    )
     serializer_class = HostedApplicationSerializer
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["name", "slug", "description", "modules__slug", "current_version"]
@@ -131,7 +142,9 @@ class HostedApplicationViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         application = self.get_object()
         application.modules.add(serializer.validated_data["module"])
-        return Response(self.get_serializer(application).data, status=status.HTTP_200_OK)
+        return Response(
+            self.get_serializer(application).data, status=status.HTTP_200_OK
+        )
 
     @action(detail=True, methods=["post"], url_path="detach-module")
     def detach_module(self, request: Request, pk: str | None = None) -> Response:
@@ -139,18 +152,25 @@ class HostedApplicationViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         application = self.get_object()
         application.modules.remove(serializer.validated_data["module"])
-        return Response(self.get_serializer(application).data, status=status.HTTP_200_OK)
+        return Response(
+            self.get_serializer(application).data, status=status.HTTP_200_OK
+        )
 
     @action(detail=True, methods=["get"], url_path="modules")
     def modules(self, request: Request, pk: str | None = None) -> Response:
         application = self.get_object()
-        return Response(ModuleSerializer(application.modules.all(), many=True).data, status=status.HTTP_200_OK)
+        return Response(
+            ModuleSerializer(application.modules.all(), many=True).data,
+            status=status.HTTP_200_OK,
+        )
 
     @action(detail=True, methods=["get", "post"], url_path="versions")
     def versions(self, request: Request, pk: str | None = None) -> Response:
         application = self.get_object()
         if request.method == "GET":
-            data = ApplicationVersionSerializer(application.versions.all(), many=True).data
+            data = ApplicationVersionSerializer(
+                application.versions.all(), many=True
+            ).data
             return Response(data, status=status.HTTP_200_OK)
 
         serializer = VersionCreateSerializer(data=request.data)
@@ -165,7 +185,10 @@ class HostedApplicationViewSet(viewsets.ModelViewSet):
                 "source": serializer.validated_data.get("source", "manual"),
             },
         )
-        return Response(ApplicationVersionSerializer(version_obj).data, status=status.HTTP_201_CREATED)
+        return Response(
+            ApplicationVersionSerializer(version_obj).data,
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class AutoDiscoverView(APIView):
@@ -180,13 +203,19 @@ class ManagementInterfaceView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs: object) -> dict[str, object]:
         context = super().get_context_data(**kwargs)
         context["modules"] = Module.objects.all().order_by("name")
-        context["tools"] = Tool.objects.prefetch_related("modules").all().order_by("name")
-        context["applications"] = HostedApplication.objects.prefetch_related("modules").all().order_by("name")
+        context["tools"] = (
+            Tool.objects.prefetch_related("modules").all().order_by("name")
+        )
+        context["applications"] = (
+            HostedApplication.objects.prefetch_related("modules").all().order_by("name")
+        )
 
         user = self.request.user
         datasets = Dataset.objects.prefetch_related("modules").filter(enabled=True)
         if not user.is_superuser:
-            datasets = datasets.filter(Q(users=user) | Q(groups__in=user.groups.all())).distinct()
+            datasets = datasets.filter(
+                Q(users=user) | Q(groups__in=user.groups.all())
+            ).distinct()
         context["datasets"] = datasets.order_by("name")
         return context
 

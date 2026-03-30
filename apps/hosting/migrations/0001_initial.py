@@ -10,7 +10,15 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="Module",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
                 ("name", models.CharField(max_length=80, unique=True)),
                 ("slug", models.SlugField(max_length=80, unique=True)),
                 ("image", models.CharField(max_length=255)),

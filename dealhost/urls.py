@@ -10,7 +10,9 @@ urlpatterns = [
     path("api/hosting/", include("apps.hosting.urls")),
     path("api/iam/", include("apps.iam.urls")),
     path("api/gateway/", include("apps.gateway.urls")),
-    path("hosting/manage/", ManagementInterfaceView.as_view(), name="hosting-management"),
+    path(
+        "hosting/manage/", ManagementInterfaceView.as_view(), name="hosting-management"
+    ),
     path("iam/manage/", IamManagementInterfaceView.as_view(), name="iam-management"),
     path(
         "hosting/manage/autodiscover/",
