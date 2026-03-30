@@ -22,10 +22,10 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version: "3.14"
 
       - name: Setup uv
-        uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57
+        uses: astral-sh/setup-uv@16592cddee295b60b48cf3202a6dbe45c6f479f9
 
       - name: Install requirements with uv
         run: uv pip install --system -r requirements.txt
@@ -50,6 +50,6 @@ jobs:
         run: uv run coverage xml -o coverage.xml
 
       - name: SonarCloud Scan
-        uses: SonarSource/sonarqube-scan-action@a31c9398be7ace6bbfaf30c0bd5d415f843d45e9
+        uses: SonarSource/sonarqube-scan-action@9598b8a83feef37de07f549027fab50ecffe6a6e
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
