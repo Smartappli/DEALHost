@@ -101,13 +101,13 @@ def auto_discover_tools_and_applications(
                 tool.save(
                     update_fields=["current_version", "released_at", "updated_at"]
                 )
-                _, version_created = tool.versions.update_or_create(
+                version_created = tool.versions.update_or_create(
                     version=str(version),
                     defaults={
                         "notes": str(payload.get("version_notes", "")),
                         "source": "autodiscovery",
                     },
-                )
+                )[1]
                 if version_created:
                     report.tool_versions_created += 1
             if created:
@@ -142,13 +142,13 @@ def auto_discover_tools_and_applications(
                 application.save(
                     update_fields=["current_version", "released_at", "updated_at"]
                 )
-                _, version_created = application.versions.update_or_create(
+                version_created = application.versions.update_or_create(
                     version=str(version),
                     defaults={
                         "notes": str(payload.get("version_notes", "")),
                         "source": "autodiscovery",
                     },
-                )
+                )[1]
                 if version_created:
                     report.application_versions_created += 1
             if created:
