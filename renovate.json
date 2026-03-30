@@ -10,11 +10,6 @@
   "prConcurrentLimit": 10,
   "packageRules": [
     {
-      "matchManagers": ["pip_requirements", "pep621", "github-actions"],
-      "groupName": "all non-major updates",
-      "matchUpdateTypes": ["minor", "patch", "digest"]
-    },
-    {
       "matchUpdateTypes": ["major"],
       "labels": ["dependencies", "major-update"]
     }
