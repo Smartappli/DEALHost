@@ -23,5 +23,5 @@ dependencies = [
 packages = ["dealhost", "dealhost.settings", "apps", "apps.common", "apps.hosting", "apps.gateway"]
 
 [tool.pytest.ini_options]
-DJANGO_SETTINGS_MODULE = "dealhost.settings.dev"
+DJANGO_SETTINGS_MODULE = "dealhost.settings.test"
 python_files = ["test_*.py", "*_test.py"]

@@ -38,7 +38,7 @@ jobs:
 
       - name: Run unit tests
         env:
-          DJANGO_SETTINGS_MODULE: dealhost.settings.dev
+          DJANGO_SETTINGS_MODULE: dealhost.settings.test
           GITHUB_TOKEN: test-token
           GITHUB_WEBHOOK_SECRET: test-secret
           APISIX_ADMIN_KEY: test-key
