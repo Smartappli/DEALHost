@@ -1,6 +1,6 @@
 services:
   django-app:
-    image: python:3.12-slim
+    image: python:3.14-slim
     init: true
     restart: unless-stopped
     working_dir: /app
