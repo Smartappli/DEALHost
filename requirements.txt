@@ -3,5 +3,5 @@ djangorestframework>=3.16,<4.0
 httpx>=0.28,<0.29
 python-dotenv>=1.1,<2.0
 granian>=2.4,<3.0
-servestatic>=2.0,<3.0
+servestatic>=4.1,<4.2
 argon2-cffi>=25.1,<26.0
