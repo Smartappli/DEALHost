@@ -119,7 +119,7 @@ def auto_discover_tools_and_applications(
                     _("%(path)s: unknown module slugs: %(slugs)s")
                     % {"path": file_path, "slugs": ", ".join(missing)},
                 )
-        except (ValueError, json.JSONDecodeError) as exc:
+        except ValueError as exc:
             report.errors.append(str(exc))
 
     for file_path in sorted((base / "applications").glob("*.json")):
@@ -160,7 +160,7 @@ def auto_discover_tools_and_applications(
                     _("%(path)s: unknown module slugs: %(slugs)s")
                     % {"path": file_path, "slugs": ", ".join(missing)},
                 )
-        except (ValueError, json.JSONDecodeError) as exc:
+        except ValueError as exc:
             report.errors.append(str(exc))
 
     return report
