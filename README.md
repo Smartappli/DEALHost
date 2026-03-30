@@ -2,11 +2,17 @@
 
 Ce dépôt contient un socle **Django 6 ASGI** (servi par **Granian**) pour exposer une plateforme d’hébergement modulaire reliée au dépôt GitHub **`dealiot/smartappli`** et pilotée via **Apache APISIX**.
 
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Smartappli_DEALIoT&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Smartappli_DEALIoT)
-[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=Smartappli_DEALIoT&metric=bugs)](https://sonarcloud.io/summary/new_code?id=Smartappli_DEALIoT)
-[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=Smartappli_DEALIoT&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=Smartappli_DEALIoT)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=Smartappli_DEALIoT&metric=coverage)](https://sonarcloud.io/summary/new_code?id=Smartappli_DEALIoT)
-[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=Smartappli_DEALIoT&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=Smartappli_DEALIoT)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Smartappli_DEALHost&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Smartappli_DEALHost)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=Smartappli_DEALHost&metric=bugs)](https://sonarcloud.io/summary/new_code?id=Smartappli_DEALHost)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=Smartappli_DEALHost&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=Smartappli_DEALHost)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=Smartappli_DEALHost&metric=coverage)](https://sonarcloud.io/summary/new_code?id=Smartappli_DEALHost)
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=Smartappli_DEALHost&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=Smartappli_DEALHost)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=Smartappli_DEALHost&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=Smartappli_DEALHost)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=Smartappli_DEALHost&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=Smartappli_DEALHost)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=Smartappli_DEALHost&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=Smartappli_DEALHost)
+[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=Smartappli_DEALHost&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=Smartappli_DEALHost)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=Smartappli_DEALHost&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=Smartappli_DEALHost)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=Smartappli_DEALHost&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=Smartappli_DEALHost)
 
 
 ## Objectif
