@@ -50,7 +50,7 @@ class HostingManagementApiTests(APITestCase):
         )
         self.tool = Tool.objects.create(name="Backoffice", slug="backoffice")
         self.application = HostedApplication.objects.create(
-            name="Storefront", slug="storefront"
+            name="Storefront", slug="storefront",
         )
 
     def test_tool_attach_and_detach_module(self) -> None:
@@ -58,13 +58,13 @@ class HostingManagementApiTests(APITestCase):
         detach_url = reverse("tools-detach-module", kwargs={"pk": self.tool.pk})
 
         attach_response = self.client.post(
-            attach_url, {"module_id": self.module_auth.pk}, format="json"
+            attach_url, {"module_id": self.module_auth.pk}, format="json",
         )
         self.assertEqual(attach_response.status_code, 200)
         self.assertEqual(len(attach_response.data["modules"]), 1)
 
         detach_response = self.client.post(
-            detach_url, {"module_id": self.module_auth.pk}, format="json"
+            detach_url, {"module_id": self.module_auth.pk}, format="json",
         )
         self.assertEqual(detach_response.status_code, 200)
         self.assertEqual(len(detach_response.data["modules"]), 0)
