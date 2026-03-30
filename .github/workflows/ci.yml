@@ -5,6 +5,9 @@ on:
     branches: ["main", "work"]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   unit-tests:
     runs-on: ${{ matrix.os }}
