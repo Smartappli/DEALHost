@@ -14,6 +14,21 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.common.events import publish_event
+from apps.common.events.subjects import (
+    HOSTING_APPLICATION_CREATED,
+    HOSTING_APPLICATION_DELETED,
+    HOSTING_APPLICATION_UPDATED,
+    HOSTING_APPLICATION_VERSION_RELEASED,
+    HOSTING_MODULE_CREATED,
+    HOSTING_MODULE_DELETED,
+    HOSTING_MODULE_UPDATED,
+    HOSTING_TOOL_CREATED,
+    HOSTING_TOOL_DELETED,
+    HOSTING_TOOL_UPDATED,
+    HOSTING_TOOL_VERSION_RELEASED,
+)
+
 from .discovery import auto_discover_tools_and_applications
 from .models import Dataset, HostedApplication, Module, Tool
 from .serializers import (
@@ -41,6 +56,31 @@ class ModuleViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(enabled=enabled.lower() == "true")
         return queryset
 
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        publish_event(
+            event_type=HOSTING_MODULE_CREATED,
+            data={"id": instance.id, "slug": instance.slug, "enabled": instance.enabled},
+            producer="apps.hosting.ModuleViewSet",
+        )
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        publish_event(
+            event_type=HOSTING_MODULE_UPDATED,
+            data={"id": instance.id, "slug": instance.slug, "enabled": instance.enabled},
+            producer="apps.hosting.ModuleViewSet",
+        )
+
+    def perform_destroy(self, instance):
+        payload = {"id": instance.id, "slug": instance.slug}
+        super().perform_destroy(instance)
+        publish_event(
+            event_type=HOSTING_MODULE_DELETED,
+            data=payload,
+            producer="apps.hosting.ModuleViewSet",
+        )
+
 
 class ToolViewSet(viewsets.ModelViewSet):
     queryset = (
@@ -63,6 +103,31 @@ class ToolViewSet(viewsets.ModelViewSet):
         if current_version:
             queryset = queryset.filter(current_version=current_version)
         return queryset.distinct()
+
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        publish_event(
+            event_type=HOSTING_TOOL_CREATED,
+            data={"id": instance.id, "slug": instance.slug, "enabled": instance.enabled},
+            producer="apps.hosting.ToolViewSet",
+        )
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        publish_event(
+            event_type=HOSTING_TOOL_UPDATED,
+            data={"id": instance.id, "slug": instance.slug, "enabled": instance.enabled},
+            producer="apps.hosting.ToolViewSet",
+        )
+
+    def perform_destroy(self, instance):
+        payload = {"id": instance.id, "slug": instance.slug}
+        super().perform_destroy(instance)
+        publish_event(
+            event_type=HOSTING_TOOL_DELETED,
+            data=payload,
+            producer="apps.hosting.ToolViewSet",
+        )
 
     @action(detail=True, methods=["post"], url_path="attach-module")
     def attach_module(self, request: Request, pk: str | None = None) -> Response:
@@ -107,6 +172,11 @@ class ToolViewSet(viewsets.ModelViewSet):
                 "source": serializer.validated_data.get("source", "manual"),
             },
         )
+        publish_event(
+            event_type=HOSTING_TOOL_VERSION_RELEASED,
+            data={"id": tool.id, "slug": tool.slug, "version": version_obj.version},
+            producer="apps.hosting.ToolViewSet",
+        )
         return Response(
             ToolVersionSerializer(version_obj).data,
             status=status.HTTP_201_CREATED,
@@ -136,6 +206,31 @@ class HostedApplicationViewSet(viewsets.ModelViewSet):
         if current_version:
             queryset = queryset.filter(current_version=current_version)
         return queryset.distinct()
+
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        publish_event(
+            event_type=HOSTING_APPLICATION_CREATED,
+            data={"id": instance.id, "slug": instance.slug, "enabled": instance.enabled},
+            producer="apps.hosting.HostedApplicationViewSet",
+        )
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        publish_event(
+            event_type=HOSTING_APPLICATION_UPDATED,
+            data={"id": instance.id, "slug": instance.slug, "enabled": instance.enabled},
+            producer="apps.hosting.HostedApplicationViewSet",
+        )
+
+    def perform_destroy(self, instance):
+        payload = {"id": instance.id, "slug": instance.slug}
+        super().perform_destroy(instance)
+        publish_event(
+            event_type=HOSTING_APPLICATION_DELETED,
+            data=payload,
+            producer="apps.hosting.HostedApplicationViewSet",
+        )
 
     @action(detail=True, methods=["post"], url_path="attach-module")
     def attach_module(self, request: Request, pk: str | None = None) -> Response:
@@ -188,6 +283,15 @@ class HostedApplicationViewSet(viewsets.ModelViewSet):
                 "notes": serializer.validated_data.get("notes", ""),
                 "source": serializer.validated_data.get("source", "manual"),
             },
+        )
+        publish_event(
+            event_type=HOSTING_APPLICATION_VERSION_RELEASED,
+            data={
+                "id": application.id,
+                "slug": application.slug,
+                "version": version_obj.version,
+            },
+            producer="apps.hosting.HostedApplicationViewSet",
         )
         return Response(
             ApplicationVersionSerializer(version_obj).data,

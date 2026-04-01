@@ -228,6 +228,20 @@ fn demo() -> Result<(), reqwest::Error> {
 - `CACHES["default"]` pointe vers Valkey via `VALKEY_URL` (ex: `redis://valkey:6379/1`).
 - `ServeStatic` est activé dans le middleware Django et via le storage `CompressedManifestStaticFilesStorage` pour servir les assets statiques en ASGI.
 
+## Messaging interne (NATS)
+
+- Un bus d'événements NATS est disponible pour la communication inter-modules/services.
+- Variables d'environnement :
+  - `NATS_URL` (défaut `nats://nats:4222`)
+  - `NATS_STREAM` (défaut `dealhost`)
+  - `NATS_SUBJECT_PREFIX` (défaut `dealhost`)
+  - `NATS_ENABLED` (`true|false`, défaut `false`)
+- Exemples de sujets publiés :
+  - `dealhost.hosting.module.created`
+  - `dealhost.hosting.tool.version-released`
+  - `dealhost.gateway.route.publish.requested`
+- Worker de consommation (MVP) : `python -m apps.common.events.worker`.
+
 ## GitHub Workflows
 
 - `CI Django DEALHost` (`.github/workflows/ci.yml`) : exécute une matrice multi-plateforme (Linux/macOS/Windows) et multi-versions Python (3.12 à 3.14). Le projet cible Python >=3.12 : les jobs 3.12/3.13/3.14 installent d'abord `requirements.txt` puis le package (`uv pip install --system -r requirements.txt` puis `uv pip install --system -e .`), vérifient les migrations, exécutent les tests unitaires sous couverture (`uv run coverage run --source=apps,dealhost,sdk manage.py test tests --verbosity 2`), exportent `coverage.xml` et lancent le contrôle de compilation.

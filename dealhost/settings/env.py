@@ -25,6 +25,14 @@ class CacheConfig:
     valkey_url: str
 
 
+@dataclass(frozen=True)
+class NatsConfig:
+    url: str
+    stream: str
+    subject_prefix: str
+    enabled: bool
+
+
 def get_env(name: str, default: str | None = None) -> str:
     value = os.getenv(name, default)
     if value is None:
@@ -53,4 +61,13 @@ def apisix_config() -> ApisixConfig:
 def cache_config() -> CacheConfig:
     return CacheConfig(
         valkey_url=get_env("VALKEY_URL", "redis://valkey:6379/1"),
+    )
+
+
+def nats_config() -> NatsConfig:
+    return NatsConfig(
+        url=get_env("NATS_URL", "nats://nats:4222"),
+        stream=get_env("NATS_STREAM", "dealhost"),
+        subject_prefix=get_env("NATS_SUBJECT_PREFIX", "dealhost"),
+        enabled=get_env("NATS_ENABLED", "false").lower() == "true",
     )
