@@ -150,6 +150,59 @@ fn demo() -> Result<(), reqwest::Error> {
 }
 ```
 
+### SDK Go (tools et applications)
+
+Le SDK Go est disponible dans `sdk/go/dealhost-sdk`.
+
+Exemple rapide :
+
+```go
+package main
+
+import (
+    "fmt"
+
+    dealhostsdk "github.com/dealiot/dealhost-sdk-go"
+)
+
+func main() {
+    client := dealhostsdk.NewClient("http://localhost:8000", "YOUR_TOKEN")
+    resp, err := client.CreateTool("Backoffice", "backoffice", "Outil d'administration", []int{1, 2}, true)
+    if err != nil {
+        panic(err)
+    }
+    fmt.Println(string(resp))
+}
+```
+
+### SDK Julia (tools et applications)
+
+Le SDK Julia est disponible dans `sdk/julia/DealHostSDK.jl`.
+
+Exemple rapide :
+
+```julia
+using DealHostSDK
+
+client = DealHostClient("http://localhost:8000"; token="YOUR_TOKEN")
+create_tool(client; name="Backoffice", slug="backoffice", description="Outil d'administration", module_ids=[1, 2], enabled=true)
+```
+
+### SDK Java (tools et applications)
+
+Le SDK Java est disponible dans `sdk/java/dealhost-sdk`.
+
+Exemple rapide :
+
+```java
+import io.dealhost.sdk.DealHostClient;
+import java.util.List;
+
+DealHostClient client = new DealHostClient("http://localhost:8000", "YOUR_TOKEN");
+String response = client.createTool("Backoffice", "backoffice", "Outil d'administration", List.of(1, 2), true);
+System.out.println(response);
+```
+
 ### Auto découverte des tools et applications
 
 - Les manifests de découverte sont lus depuis:
