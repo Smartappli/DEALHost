@@ -60,7 +60,11 @@ class ModuleViewSet(viewsets.ModelViewSet):
         instance = serializer.save()
         publish_event(
             event_type=HOSTING_MODULE_CREATED,
-            data={"id": instance.id, "slug": instance.slug, "enabled": instance.enabled},
+            data={
+                "id": instance.id,
+                "slug": instance.slug,
+                "enabled": instance.enabled,
+            },
             producer="apps.hosting.ModuleViewSet",
         )
 
@@ -68,7 +72,11 @@ class ModuleViewSet(viewsets.ModelViewSet):
         instance = serializer.save()
         publish_event(
             event_type=HOSTING_MODULE_UPDATED,
-            data={"id": instance.id, "slug": instance.slug, "enabled": instance.enabled},
+            data={
+                "id": instance.id,
+                "slug": instance.slug,
+                "enabled": instance.enabled,
+            },
             producer="apps.hosting.ModuleViewSet",
         )
 
@@ -108,7 +116,11 @@ class ToolViewSet(viewsets.ModelViewSet):
         instance = serializer.save()
         publish_event(
             event_type=HOSTING_TOOL_CREATED,
-            data={"id": instance.id, "slug": instance.slug, "enabled": instance.enabled},
+            data={
+                "id": instance.id,
+                "slug": instance.slug,
+                "enabled": instance.enabled,
+            },
             producer="apps.hosting.ToolViewSet",
         )
 
@@ -116,7 +128,11 @@ class ToolViewSet(viewsets.ModelViewSet):
         instance = serializer.save()
         publish_event(
             event_type=HOSTING_TOOL_UPDATED,
-            data={"id": instance.id, "slug": instance.slug, "enabled": instance.enabled},
+            data={
+                "id": instance.id,
+                "slug": instance.slug,
+                "enabled": instance.enabled,
+            },
             producer="apps.hosting.ToolViewSet",
         )
 
@@ -211,7 +227,11 @@ class HostedApplicationViewSet(viewsets.ModelViewSet):
         instance = serializer.save()
         publish_event(
             event_type=HOSTING_APPLICATION_CREATED,
-            data={"id": instance.id, "slug": instance.slug, "enabled": instance.enabled},
+            data={
+                "id": instance.id,
+                "slug": instance.slug,
+                "enabled": instance.enabled,
+            },
             producer="apps.hosting.HostedApplicationViewSet",
         )
 
@@ -219,7 +239,11 @@ class HostedApplicationViewSet(viewsets.ModelViewSet):
         instance = serializer.save()
         publish_event(
             event_type=HOSTING_APPLICATION_UPDATED,
-            data={"id": instance.id, "slug": instance.slug, "enabled": instance.enabled},
+            data={
+                "id": instance.id,
+                "slug": instance.slug,
+                "enabled": instance.enabled,
+            },
             producer="apps.hosting.HostedApplicationViewSet",
         )
 

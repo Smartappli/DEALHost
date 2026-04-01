@@ -25,4 +25,7 @@ class EventPublisherTests(SimpleTestCase):
         publish_mock.assert_called_once()
         kwargs = publish_mock.call_args.kwargs
         self.assertEqual(kwargs["subject"], "dealhost.gateway.route.publish.requested")
-        self.assertEqual(kwargs["payload"]["event_type"], "gateway.route.publish.requested")
+        self.assertEqual(
+            kwargs["payload"]["event_type"],
+            "gateway.route.publish.requested",
+        )
