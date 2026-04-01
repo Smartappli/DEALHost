@@ -75,7 +75,9 @@ class NatsClientEnabledTests(SimpleTestCase):
         fake_module.Client = FakeClient
 
         with patch.dict(sys.modules, {"nats.aio.client": fake_module}):
-            asyncio.run(nats_client._publish("dealhost.hosting.module.created", {"id": 1}))
+            asyncio.run(
+                nats_client._publish("dealhost.hosting.module.created", {"id": 1})
+            )
 
         self.assertEqual(calls["url"], "nats://nats:4222")
         self.assertEqual(calls["subject"], "dealhost.hosting.module.created")
@@ -108,7 +110,10 @@ class WorkerTests(SimpleTestCase):
 
         with (
             patch("apps.common.events.worker.NATS", return_value=FakeClient()),
-            patch("apps.common.events.worker.asyncio.sleep", side_effect=stop_after_first_sleep),
+            patch(
+                "apps.common.events.worker.asyncio.sleep",
+                side_effect=stop_after_first_sleep,
+            ),
             self.assertRaises(asyncio.CancelledError),
         ):
             asyncio.run(run_worker())

@@ -34,7 +34,9 @@ class HostingEventPublishingTests(SimpleTestCase):
         instance = Mock(id=3, slug="frontend")
         view = HostedApplicationViewSet()
 
-        with patch("rest_framework.viewsets.ModelViewSet.perform_destroy") as destroy_super:
+        with patch(
+            "rest_framework.viewsets.ModelViewSet.perform_destroy"
+        ) as destroy_super:
             view.perform_destroy(instance)
 
         destroy_super.assert_called_once()

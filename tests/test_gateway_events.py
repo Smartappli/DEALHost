@@ -12,7 +12,11 @@ class GatewayEventPublishingTests(SimpleTestCase):
 
     @patch("apps.gateway.views.publish_event")
     @patch("apps.gateway.views.ApisixService")
-    def test_publish_route_emits_requested_and_completed(self, apisix_service_cls, publish_mock):
+    def test_publish_route_emits_requested_and_completed(
+        self,
+        apisix_service_cls,
+        publish_mock,
+    ):
         apisix_service_cls.return_value.publish_route.return_value = {"route_id": "r-1"}
         request = self.factory.post(
             "/api/gateway/apisix/publish/",

@@ -289,7 +289,7 @@ System.out.println(response);
   - `NATS_STREAM` (défaut `dealhost`)
   - `NATS_SUBJECT_PREFIX` (défaut `dealhost`)
   - `NATS_ENABLED` (`true|false`, défaut `false`)
-- Exemples de sujets publiés :
+- Examples de sujets publiés :
   - `dealhost.hosting.module.created`
   - `dealhost.hosting.tool.version-released`
   - `dealhost.gateway.route.publish.requested`
