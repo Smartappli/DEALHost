@@ -150,6 +150,59 @@ fn demo() -> Result<(), reqwest::Error> {
 }
 ```
 
+### SDK Go (tools et applications)
+
+Le SDK Go est disponible dans `sdk/go/dealhost-sdk`.
+
+Exemple rapide :
+
+```go
+package main
+
+import (
+    "fmt"
+
+    dealhostsdk "github.com/dealiot/dealhost-sdk-go"
+)
+
+func main() {
+    client := dealhostsdk.NewClient("http://localhost:8000", "YOUR_TOKEN")
+    resp, err := client.CreateTool("Backoffice", "backoffice", "Outil d'administration", []int{1, 2}, true)
+    if err != nil {
+        panic(err)
+    }
+    fmt.Println(string(resp))
+}
+```
+
+### SDK Julia (tools et applications)
+
+Le SDK Julia est disponible dans `sdk/julia/DealHostSDK.jl`.
+
+Exemple rapide :
+
+```julia
+using DealHostSDK
+
+client = DealHostClient("http://localhost:8000"; token="YOUR_TOKEN")
+create_tool(client; name="Backoffice", slug="backoffice", description="Outil d'administration", module_ids=[1, 2], enabled=true)
+```
+
+### SDK Java (tools et applications)
+
+Le SDK Java est disponible dans `sdk/java/dealhost-sdk`.
+
+Exemple rapide :
+
+```java
+import io.dealhost.sdk.DealHostClient;
+import java.util.List;
+
+DealHostClient client = new DealHostClient("http://localhost:8000", "YOUR_TOKEN");
+String response = client.createTool("Backoffice", "backoffice", "Outil d'administration", List.of(1, 2), true);
+System.out.println(response);
+```
+
 ### Auto découverte des tools et applications
 
 - Les manifests de découverte sont lus depuis:
@@ -227,6 +280,20 @@ fn demo() -> Result<(), reqwest::Error> {
 - `SESSION_ENGINE=django.contrib.sessions.backends.cached_db` : sessions persistées en base Django.
 - `CACHES["default"]` pointe vers Valkey via `VALKEY_URL` (ex: `redis://valkey:6379/1`).
 - `ServeStatic` est activé dans le middleware Django et via le storage `CompressedManifestStaticFilesStorage` pour servir les assets statiques en ASGI.
+
+## Messaging interne (NATS)
+
+- Un bus d'événements NATS est disponible pour la communication inter-modules/services.
+- Variables d'environnement :
+  - `NATS_URL` (défaut `nats://nats:4222`)
+  - `NATS_STREAM` (défaut `dealhost`)
+  - `NATS_SUBJECT_PREFIX` (défaut `dealhost`)
+  - `NATS_ENABLED` (`true|false`, défaut `false`)
+- Examples de sujets publiés :
+  - `dealhost.hosting.module.created`
+  - `dealhost.hosting.tool.version-released`
+  - `dealhost.gateway.route.publish.requested`
+- Worker de consommation (MVP) : `python -m apps.common.events.worker`.
 
 ## GitHub Workflows
 

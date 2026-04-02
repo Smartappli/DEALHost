@@ -16,8 +16,11 @@ services:
     environment:
       DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE:-dealhost.settings.dev}
       VALKEY_URL: ${VALKEY_URL:-redis://valkey:6379/1}
+      NATS_URL: ${NATS_URL:-nats://nats:4222}
     depends_on:
       valkey:
+        condition: service_healthy
+      nats:
         condition: service_healthy
     ports:
       - "8000:8000"
@@ -38,6 +41,19 @@ services:
       - "6379:6379"
     healthcheck:
       test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  nats:
+    image: nats:2-alpine
+    restart: unless-stopped
+    command: ["-js", "-m", "8222"]
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8222/healthz"]
       interval: 10s
       timeout: 3s
       retries: 5
