@@ -48,8 +48,11 @@ jobs:
           GITHUB_WEBHOOK_SECRET: test-secret
           APISIX_ADMIN_KEY: test-key
         run: >-
-          uv run coverage run --source=apps,dealhost,sdk
+          uv run coverage run
           manage.py test tests --verbosity 2
+
+      - name: Enforce minimum coverage (80%)
+        run: uv run coverage report --fail-under=80
 
       - name: Export coverage XML
         run: uv run coverage xml -o coverage.xml
