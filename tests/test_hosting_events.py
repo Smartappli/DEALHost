@@ -453,12 +453,8 @@ class HostingEventPublishingTests(SimpleTestCase):
         datasets_ordered = Mock(name="datasets_ordered")
 
         module_model.objects.all.return_value.order_by.return_value = modules
-        tool_model.objects.prefetch_related.return_value.all.return_value.order_by.return_value = (
-            tools
-        )
-        hosted_application_model.objects.prefetch_related.return_value.all.return_value.order_by.return_value = (
-            applications
-        )
+        tool_model.objects.prefetch_related.return_value.all.return_value.order_by.return_value = tools
+        hosted_application_model.objects.prefetch_related.return_value.all.return_value.order_by.return_value = applications
         dataset_model.objects.prefetch_related.return_value.filter.return_value = (
             datasets
         )
