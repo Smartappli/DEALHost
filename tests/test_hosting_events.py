@@ -8,6 +8,7 @@ from apps.hosting.views import (
     AutoDiscoverView,
     HostedApplicationViewSet,
     ManagementAutoDiscoverView,
+    ManagementInterfaceView,
     ModuleViewSet,
     ToolViewSet,
 )
@@ -20,6 +21,39 @@ class HostingEventPublishingTests(SimpleTestCase):
         serializer.save.return_value = SimpleNamespace(id=1, slug="core", enabled=True)
 
         ModuleViewSet().perform_create(serializer)
+
+        publish_mock.assert_called_once()
+
+    @patch("apps.hosting.views.publish_event")
+    def test_module_perform_update_emits_event(self, publish_mock):
+        serializer = Mock()
+        serializer.save.return_value = SimpleNamespace(id=4, slug="core", enabled=False)
+
+        ModuleViewSet().perform_update(serializer)
+
+        publish_mock.assert_called_once()
+
+    @patch("apps.hosting.views.publish_event")
+    def test_module_perform_destroy_emits_event(self, publish_mock):
+        instance = Mock(id=8, slug="core")
+        view = ModuleViewSet()
+
+        with patch(
+            "rest_framework.viewsets.ModelViewSet.perform_destroy"
+        ) as destroy_super:
+            view.perform_destroy(instance)
+
+        destroy_super.assert_called_once_with(instance)
+        publish_mock.assert_called_once()
+
+    @patch("apps.hosting.views.publish_event")
+    def test_tool_perform_create_emits_event(self, publish_mock):
+        serializer = Mock()
+        serializer.save.return_value = SimpleNamespace(
+            id=10, slug="catalog", enabled=True
+        )
+
+        ToolViewSet().perform_create(serializer)
 
         publish_mock.assert_called_once()
 
@@ -70,6 +104,17 @@ class HostingEventPublishingTests(SimpleTestCase):
         )
 
         HostedApplicationViewSet().perform_create(serializer)
+
+        publish_mock.assert_called_once()
+
+    @patch("apps.hosting.views.publish_event")
+    def test_application_perform_update_emits_event(self, publish_mock):
+        serializer = Mock()
+        serializer.save.return_value = SimpleNamespace(
+            id=6, slug="storefront", enabled=False
+        )
+
+        HostedApplicationViewSet().perform_update(serializer)
 
         publish_mock.assert_called_once()
 
@@ -292,6 +337,20 @@ class HostingEventPublishingTests(SimpleTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, [{"version": "2.0.0"}])
 
+    @patch("apps.hosting.views.ModuleSerializer")
+    def test_application_modules_returns_serialized_modules(self, module_serializer):
+        application = Mock()
+        application.modules.all.return_value = [SimpleNamespace(slug="module-core")]
+        module_serializer.return_value = SimpleNamespace(data=[{"slug": "module-core"}])
+        view = HostedApplicationViewSet()
+        view.get_object = Mock(return_value=application)
+
+        response = view.modules(SimpleNamespace())
+
+        module_serializer.assert_called_once_with(application.modules.all(), many=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, [{"slug": "module-core"}])
+
     @patch("apps.hosting.views.publish_event")
     @patch("apps.hosting.views.ApplicationVersionSerializer")
     @patch("apps.hosting.views.VersionCreateSerializer")
@@ -372,3 +431,48 @@ class HostingEventPublishingTests(SimpleTestCase):
         success_message.assert_called_once()
         error_message.assert_called_once_with(request, "manifest parse error")
         redirect_mock.assert_called_once_with("hosting-management")
+
+    @patch("apps.hosting.views.Dataset")
+    @patch("apps.hosting.views.HostedApplication")
+    @patch("apps.hosting.views.Tool")
+    @patch("apps.hosting.views.Module")
+    @patch("django.views.generic.base.TemplateView.get_context_data")
+    def test_management_interface_context_for_superuser(
+        self,
+        super_context_data,
+        module_model,
+        tool_model,
+        hosted_application_model,
+        dataset_model,
+    ):
+        super_context_data.return_value = {"existing": True}
+        modules = Mock(name="modules")
+        tools = Mock(name="tools")
+        applications = Mock(name="applications")
+        datasets = Mock(name="datasets")
+        datasets_ordered = Mock(name="datasets_ordered")
+
+        module_model.objects.all.return_value.order_by.return_value = modules
+        tool_model.objects.prefetch_related.return_value.all.return_value.order_by.return_value = (
+            tools
+        )
+        hosted_application_model.objects.prefetch_related.return_value.all.return_value.order_by.return_value = (
+            applications
+        )
+        dataset_model.objects.prefetch_related.return_value.filter.return_value = (
+            datasets
+        )
+        datasets.order_by.return_value = datasets_ordered
+
+        request = SimpleNamespace(user=SimpleNamespace(is_superuser=True))
+        view = ManagementInterfaceView()
+        view.request = request
+
+        context = view.get_context_data()
+
+        datasets.filter.assert_not_called()
+        self.assertEqual(context["existing"], True)
+        self.assertEqual(context["modules"], modules)
+        self.assertEqual(context["tools"], tools)
+        self.assertEqual(context["applications"], applications)
+        self.assertEqual(context["datasets"], datasets_ordered)
