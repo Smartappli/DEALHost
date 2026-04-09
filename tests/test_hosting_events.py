@@ -37,6 +37,19 @@ class HostingEventPublishingTests(SimpleTestCase):
         publish_mock.assert_called_once()
 
     @patch("apps.hosting.views.publish_event")
+    def test_tool_perform_destroy_emits_event(self, publish_mock):
+        instance = Mock(id=9, slug="catalog")
+        view = ToolViewSet()
+
+        with patch(
+            "rest_framework.viewsets.ModelViewSet.perform_destroy"
+        ) as destroy_super:
+            view.perform_destroy(instance)
+
+        destroy_super.assert_called_once_with(instance)
+        publish_mock.assert_called_once()
+
+    @patch("apps.hosting.views.publish_event")
     def test_application_perform_destroy_emits_event(self, publish_mock):
         instance = Mock(id=3, slug="frontend")
         view = HostedApplicationViewSet()
@@ -47,6 +60,15 @@ class HostingEventPublishingTests(SimpleTestCase):
             view.perform_destroy(instance)
 
         destroy_super.assert_called_once()
+        publish_mock.assert_called_once()
+
+    @patch("apps.hosting.views.publish_event")
+    def test_application_perform_create_emits_event(self, publish_mock):
+        serializer = Mock()
+        serializer.save.return_value = SimpleNamespace(id=5, slug="storefront", enabled=True)
+
+        HostedApplicationViewSet().perform_create(serializer)
+
         publish_mock.assert_called_once()
 
     @patch("rest_framework.viewsets.ModelViewSet.get_queryset")
@@ -85,6 +107,29 @@ class HostingEventPublishingTests(SimpleTestCase):
         queryset.filter.assert_any_call(current_version="1.2.3")
         queryset.distinct.assert_called_once()
 
+    @patch("rest_framework.viewsets.ModelViewSet.get_queryset")
+    def test_application_get_queryset_applies_all_filters(self, super_queryset):
+        queryset = Mock()
+        queryset.filter.return_value = queryset
+        queryset.distinct.return_value = "distinct-queryset"
+        super_queryset.return_value = queryset
+        view = HostedApplicationViewSet()
+        view.request = SimpleNamespace(
+            query_params={
+                "enabled": "true",
+                "module_slug": "module-core",
+                "current_version": "2.0.1",
+            },
+        )
+
+        result = view.get_queryset()
+
+        self.assertEqual(result, "distinct-queryset")
+        queryset.filter.assert_any_call(enabled=True)
+        queryset.filter.assert_any_call(modules__slug="module-core")
+        queryset.filter.assert_any_call(current_version="2.0.1")
+        queryset.distinct.assert_called_once()
+
     @patch("apps.hosting.views.ModuleAttachSerializer")
     def test_tool_attach_module_adds_module_and_returns_serialized_tool(
         self, serializer_class
@@ -105,6 +150,88 @@ class HostingEventPublishingTests(SimpleTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, {"slug": "tool"})
 
+    @patch("apps.hosting.views.ModuleSerializer")
+    def test_tool_modules_returns_serialized_modules(self, module_serializer):
+        tool = Mock()
+        tool.modules.all.return_value = [SimpleNamespace(slug="module-core")]
+        module_serializer.return_value = SimpleNamespace(data=[{"slug": "module-core"}])
+        view = ToolViewSet()
+        view.get_object = Mock(return_value=tool)
+
+        response = view.modules(SimpleNamespace())
+
+        module_serializer.assert_called_once_with(tool.modules.all(), many=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, [{"slug": "module-core"}])
+
+    @patch("apps.hosting.views.ModuleAttachSerializer")
+    def test_tool_detach_module_removes_module(self, serializer_class):
+        serializer_instance = Mock()
+        serializer_instance.validated_data = {"module": "module-core"}
+        serializer_class.return_value = serializer_instance
+        tool = Mock()
+        view = ToolViewSet()
+        view.get_object = Mock(return_value=tool)
+        view.get_serializer = Mock(return_value=SimpleNamespace(data={"slug": "tool"}))
+
+        response = view.detach_module(SimpleNamespace(data={"module": 1}))
+
+        serializer_class.assert_called_once_with(data={"module": 1})
+        serializer_instance.is_valid.assert_called_once_with(raise_exception=True)
+        tool.modules.remove.assert_called_once_with("module-core")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, {"slug": "tool"})
+
+    @patch("apps.hosting.views.publish_event")
+    @patch("apps.hosting.views.ToolVersionSerializer")
+    @patch("apps.hosting.views.VersionCreateSerializer")
+    @patch("apps.hosting.views.timezone.now")
+    def test_tool_versions_post_updates_current_version_and_publishes(
+        self,
+        now_mock,
+        version_create_serializer_cls,
+        tool_version_serializer_cls,
+        publish_mock,
+    ):
+        now_mock.return_value = "now"
+        tool = Mock(id=7, slug="tool-slug")
+        version_obj = SimpleNamespace(version="1.1.0")
+        tool.versions.update_or_create.return_value = (version_obj, True)
+        serializer = Mock()
+        serializer.validated_data = {
+            "version": "1.1.0",
+            "notes": "release notes",
+            "source": "ci",
+        }
+        version_create_serializer_cls.return_value = serializer
+        tool_version_serializer_cls.return_value = SimpleNamespace(data={"version": "1.1.0"})
+        view = ToolViewSet()
+        view.get_object = Mock(return_value=tool)
+
+        response = view.versions(SimpleNamespace(method="POST", data={"version": "1.1.0"}))
+
+        serializer.is_valid.assert_called_once_with(raise_exception=True)
+        tool.save.assert_called_once_with(
+            update_fields=["current_version", "released_at", "updated_at"]
+        )
+        publish_mock.assert_called_once()
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data, {"version": "1.1.0"})
+
+    @patch("apps.hosting.views.ToolVersionSerializer")
+    def test_tool_versions_get_returns_versions(self, serializer_cls):
+        tool = Mock()
+        tool.versions.all.return_value = ["v1"]
+        serializer_cls.return_value = SimpleNamespace(data=[{"version": "1.0.0"}])
+        view = ToolViewSet()
+        view.get_object = Mock(return_value=tool)
+
+        response = view.versions(SimpleNamespace(method="GET"))
+
+        serializer_cls.assert_called_once_with(tool.versions.all(), many=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, [{"version": "1.0.0"}])
+
     @patch("apps.hosting.views.ModuleAttachSerializer")
     def test_application_detach_module_removes_module(self, serializer_class):
         serializer_instance = Mock()
@@ -124,6 +251,76 @@ class HostingEventPublishingTests(SimpleTestCase):
         application.modules.remove.assert_called_once_with("module-core")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, {"slug": "storefront"})
+
+    @patch("apps.hosting.views.ModuleAttachSerializer")
+    def test_application_attach_module_adds_module(self, serializer_class):
+        serializer_instance = Mock()
+        serializer_instance.validated_data = {"module": "module-core"}
+        serializer_class.return_value = serializer_instance
+        application = Mock()
+        view = HostedApplicationViewSet()
+        view.get_object = Mock(return_value=application)
+        view.get_serializer = Mock(return_value=SimpleNamespace(data={"slug": "storefront"}))
+
+        response = view.attach_module(SimpleNamespace(data={"module": 1}))
+
+        serializer_class.assert_called_once_with(data={"module": 1})
+        serializer_instance.is_valid.assert_called_once_with(raise_exception=True)
+        application.modules.add.assert_called_once_with("module-core")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, {"slug": "storefront"})
+
+    @patch("apps.hosting.views.ApplicationVersionSerializer")
+    def test_application_versions_get_returns_versions(self, serializer_cls):
+        application = Mock()
+        application.versions.all.return_value = ["v1"]
+        serializer_cls.return_value = SimpleNamespace(data=[{"version": "2.0.0"}])
+        view = HostedApplicationViewSet()
+        view.get_object = Mock(return_value=application)
+
+        response = view.versions(SimpleNamespace(method="GET"))
+
+        serializer_cls.assert_called_once_with(application.versions.all(), many=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, [{"version": "2.0.0"}])
+
+    @patch("apps.hosting.views.publish_event")
+    @patch("apps.hosting.views.ApplicationVersionSerializer")
+    @patch("apps.hosting.views.VersionCreateSerializer")
+    @patch("apps.hosting.views.timezone.now")
+    def test_application_versions_post_updates_current_version_and_publishes(
+        self,
+        now_mock,
+        version_create_serializer_cls,
+        application_version_serializer_cls,
+        publish_mock,
+    ):
+        now_mock.return_value = "now"
+        application = Mock(id=11, slug="storefront")
+        version_obj = SimpleNamespace(version="3.0.0")
+        application.versions.update_or_create.return_value = (version_obj, True)
+        serializer = Mock()
+        serializer.validated_data = {
+            "version": "3.0.0",
+            "notes": "release notes",
+            "source": "manual",
+        }
+        version_create_serializer_cls.return_value = serializer
+        application_version_serializer_cls.return_value = SimpleNamespace(
+            data={"version": "3.0.0"}
+        )
+        view = HostedApplicationViewSet()
+        view.get_object = Mock(return_value=application)
+
+        response = view.versions(SimpleNamespace(method="POST", data={"version": "3.0.0"}))
+
+        serializer.is_valid.assert_called_once_with(raise_exception=True)
+        application.save.assert_called_once_with(
+            update_fields=["current_version", "released_at", "updated_at"]
+        )
+        publish_mock.assert_called_once()
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data, {"version": "3.0.0"})
 
     @patch("apps.hosting.views.auto_discover_tools_and_applications")
     def test_api_autodiscover_view_returns_report_dict(self, autodiscover):
