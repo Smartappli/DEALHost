@@ -65,7 +65,9 @@ class HostingEventPublishingTests(SimpleTestCase):
     @patch("apps.hosting.views.publish_event")
     def test_application_perform_create_emits_event(self, publish_mock):
         serializer = Mock()
-        serializer.save.return_value = SimpleNamespace(id=5, slug="storefront", enabled=True)
+        serializer.save.return_value = SimpleNamespace(
+            id=5, slug="storefront", enabled=True
+        )
 
         HostedApplicationViewSet().perform_create(serializer)
 
@@ -204,11 +206,15 @@ class HostingEventPublishingTests(SimpleTestCase):
             "source": "ci",
         }
         version_create_serializer_cls.return_value = serializer
-        tool_version_serializer_cls.return_value = SimpleNamespace(data={"version": "1.1.0"})
+        tool_version_serializer_cls.return_value = SimpleNamespace(
+            data={"version": "1.1.0"}
+        )
         view = ToolViewSet()
         view.get_object = Mock(return_value=tool)
 
-        response = view.versions(SimpleNamespace(method="POST", data={"version": "1.1.0"}))
+        response = view.versions(
+            SimpleNamespace(method="POST", data={"version": "1.1.0"})
+        )
 
         serializer.is_valid.assert_called_once_with(raise_exception=True)
         tool.save.assert_called_once_with(
@@ -260,7 +266,9 @@ class HostingEventPublishingTests(SimpleTestCase):
         application = Mock()
         view = HostedApplicationViewSet()
         view.get_object = Mock(return_value=application)
-        view.get_serializer = Mock(return_value=SimpleNamespace(data={"slug": "storefront"}))
+        view.get_serializer = Mock(
+            return_value=SimpleNamespace(data={"slug": "storefront"})
+        )
 
         response = view.attach_module(SimpleNamespace(data={"module": 1}))
 
@@ -312,7 +320,9 @@ class HostingEventPublishingTests(SimpleTestCase):
         view = HostedApplicationViewSet()
         view.get_object = Mock(return_value=application)
 
-        response = view.versions(SimpleNamespace(method="POST", data={"version": "3.0.0"}))
+        response = view.versions(
+            SimpleNamespace(method="POST", data={"version": "3.0.0"})
+        )
 
         serializer.is_valid.assert_called_once_with(raise_exception=True)
         application.save.assert_called_once_with(
