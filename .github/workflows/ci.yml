@@ -27,7 +27,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Setup uv
-        uses: astral-sh/setup-uv@c0c76fcf76c37099e6a452584d04b015240faefc
+        uses: astral-sh/setup-uv@05143d3dcd540a42aa638bb0920ac4e3123808a5
 
       - name: Install requirements with uv
         run: uv pip install --system -r requirements.txt
