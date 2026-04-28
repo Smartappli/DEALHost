@@ -61,6 +61,6 @@ jobs:
           CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
 
       - name: SonarCloud Scan
-        uses: SonarSource/sonarqube-scan-action@30dbe5c9eeccb106afb2590dcb61f7a05ffbee14
+        uses: SonarSource/sonarqube-scan-action@55e44800a8f495208cce6e4e82f5dedb45fcf0ef
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
