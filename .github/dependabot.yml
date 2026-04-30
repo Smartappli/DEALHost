@@ -5,7 +5,8 @@ updates:
     schedule:
       interval: "daily"
     labels:
-      - "dependencies"
+      - "🤖 Dependencies"
+      - "🤖 Dependabot"
       - "python"
 
   - package-ecosystem: "docker"
@@ -13,7 +14,8 @@ updates:
     schedule:
       interval: "daily"
     labels:
-      - "dependencies"
+      - "🤖 Dependencies"
+      - "🤖 Dependabot"
       - "docker"
 
   - package-ecosystem: "docker-compose"
@@ -21,7 +23,8 @@ updates:
     schedule:
       interval: "daily"
     labels:
-      - "dependencies"
+      - "🤖 Dependencies"
+      - "🤖 Dependabot"
       - "docker-compose"
 
   - package-ecosystem: "github-actions"
@@ -29,5 +32,6 @@ updates:
     schedule:
       interval: "daily"
     labels:
-      - "dependencies"
+      - "🤖 Dependencies"
+      - "🤖 Dependabot"
       - "github-actions"
