@@ -18,7 +18,7 @@ jobs:
           python-version: "3.14"
 
       - name: Setup uv
-        uses: astral-sh/setup-uv@05143d3dcd540a42aa638bb0920ac4e3123808a5
+        uses: astral-sh/setup-uv@363818fa0d4c29777775eb4d1526c3b9c29273ff
 
       - name: Install pre-commit with uv
         run: uv pip install --system pre-commit
