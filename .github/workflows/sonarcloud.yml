@@ -25,7 +25,7 @@ jobs:
           python-version: "3.14"
 
       - name: Setup uv
-        uses: astral-sh/setup-uv@853401723d6d6622f431a3b4e6385bf65e8035b7
+        uses: astral-sh/setup-uv@ba17a16c0afc72ea47311891c76009518d0cf1aa
 
       - name: Install requirements with uv
         run: uv pip install --system -r requirements.txt
