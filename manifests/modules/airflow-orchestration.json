@@ -1,0 +1,15 @@
+{
+  "name": "DEALIoT Airflow Orchestration",
+  "slug": "airflow-orchestration",
+  "image": "ghcr.io/smartappli/dealiot-orchestration:local-placeholder",
+  "branch": "main",
+  "repository_owner": "Smartappli",
+  "repository_name": "DEALIoT",
+  "source_path": "airflow",
+  "deployment_target": "kubernetes",
+  "public_path": "/dealiot/airflow",
+  "upstream_host": "airflow-apiserver",
+  "upstream_port": 8080,
+  "healthcheck_path": "/api/v2/monitor/health",
+  "enabled": true
+}

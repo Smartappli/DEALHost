@@ -362,11 +362,14 @@ class ManagementAutoDiscoverView(View):
                 _("Autodiscovery completed: ")
                 + _(
                     "tools created=%(tools_created)s, tools updated=%(tools_updated)s, "
+                    "modules created=%(modules_created)s, modules updated=%(modules_updated)s, "
                     "apps created=%(apps_created)s, apps updated=%(apps_updated)s, "
                     "tool versions created=%(tool_versions_created)s, "
                     "application versions created=%(application_versions_created)s.",
                 )
                 % {
+                    "modules_created": report.modules_created,
+                    "modules_updated": report.modules_updated,
                     "tools_created": report.tools_created,
                     "tools_updated": report.tools_updated,
                     "apps_created": report.applications_created,

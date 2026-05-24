@@ -1,0 +1,14 @@
+{
+  "name": "DEALIoT Observability",
+  "slug": "observability",
+  "image": "prom/prometheus:latest",
+  "branch": "main",
+  "repository_owner": "Smartappli",
+  "repository_name": "DEALIoT",
+  "source_path": "prometheus",
+  "deployment_target": "kubernetes",
+  "public_path": "/dealiot/prometheus",
+  "upstream_host": "prometheus",
+  "upstream_port": 9090,
+  "enabled": true
+}
