@@ -46,8 +46,8 @@ class ModuleViewSet(viewsets.ModelViewSet):
     queryset = Module.objects.all().order_by("name")
     serializer_class = ModuleSerializer
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ["name", "slug", "branch"]
-    ordering_fields = ["name", "slug", "created_at"]
+    search_fields = ["name", "slug", "branch", "source_path", "repository_name"]
+    ordering_fields = ["name", "slug", "deployment_target", "created_at"]
 
     def get_queryset(self):  # type: ignore[override]
         queryset = super().get_queryset()
