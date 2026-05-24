@@ -1,0 +1,104 @@
+{
+  "name": "DEALIoT",
+  "slug": "dealiot",
+  "repository_full_name": "Smartappli/DEALIoT",
+  "allowed_events": [
+    "push"
+  ],
+  "path_mappings": [
+    {
+      "prefix": "mqtt-kafka-bridge/",
+      "module_slug": "mqtt-kafka-bridge"
+    },
+    {
+      "prefix": "wildfi-decoder/",
+      "module_slug": "wildfi-decoder"
+    },
+    {
+      "prefix": "airflow/",
+      "module_slug": "airflow-orchestration"
+    },
+    {
+      "prefix": "pipelines/",
+      "module_slug": "flink-runtime"
+    },
+    {
+      "prefix": "flink/",
+      "module_slug": "flink-runtime"
+    },
+    {
+      "prefix": "beam/",
+      "module_slug": "beam-runtime"
+    },
+    {
+      "prefix": "apicurio/",
+      "module_slug": "schema-registry-contracts"
+    },
+    {
+      "prefix": "dealiot_contracts/",
+      "module_slug": "schema-registry-contracts"
+    },
+    {
+      "prefix": "prometheus/",
+      "module_slug": "observability"
+    },
+    {
+      "prefix": "grafana/",
+      "module_slug": "observability"
+    },
+    {
+      "prefix": "deploy/",
+      "module_slug": "dealiot-platform"
+    },
+    {
+      "prefix": "scripts/",
+      "module_slug": "dealiot-platform"
+    },
+    {
+      "prefix": ".github/workflows/build-and-push-images.yml",
+      "module_slug": "dealiot-platform"
+    },
+    {
+      "prefix": ".github/workflows/compose-deployment-test.yml",
+      "module_slug": "dealiot-platform"
+    },
+    {
+      "prefix": ".github/workflows/production-deployment-test.yml",
+      "module_slug": "dealiot-platform"
+    },
+    {
+      "prefix": "docker-compose",
+      "module_slug": "dealiot-platform"
+    },
+    {
+      "prefix": ".env.example",
+      "module_slug": "dealiot-platform"
+    }
+  ],
+  "route_defaults": [
+    {
+      "module_slug": "schema-registry-contracts",
+      "public_path": "/dealiot/apicurio",
+      "upstream_host": "apicurio-registry",
+      "upstream_port": 8080
+    },
+    {
+      "module_slug": "flink-runtime",
+      "public_path": "/dealiot/flink",
+      "upstream_host": "flink-jobmanager",
+      "upstream_port": 8081
+    },
+    {
+      "module_slug": "airflow-orchestration",
+      "public_path": "/dealiot/airflow",
+      "upstream_host": "airflow-apiserver",
+      "upstream_port": 8080
+    },
+    {
+      "module_slug": "observability",
+      "public_path": "/dealiot/prometheus",
+      "upstream_host": "prometheus",
+      "upstream_port": 9090
+    }
+  ]
+}

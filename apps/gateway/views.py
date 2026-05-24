@@ -14,6 +14,14 @@ from apps.common.events.subjects import (
 from .services import ApisixService, GitHubService
 
 
+def _is_truthy(value):
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return False
+    return str(value).strip().casefold() in {"1", "true", "yes", "on"}
+
+
 class HealthView(APIView):
     def get(self, request):
         return Response({"status": "ok", "service": "gateway"})
@@ -22,7 +30,24 @@ class HealthView(APIView):
 class SyncGitHubView(APIView):
     def post(self, request):
         branch = request.data.get("branch", "main")
-        commit = GitHubService().latest_commit(branch=branch)
+        repository = request.data.get("repository_full_name") or request.data.get(
+            "repository",
+        )
+        github = GitHubService()
+        if repository and not github.is_allowed_repository_full_name(str(repository)):
+            return Response(
+                {
+                    "detail": _("Repository is not allowed."),
+                    "repository": repository,
+                    "allowed_repositories": github.allowed_repository_full_names(),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        commit = github.latest_commit(
+            branch=branch,
+            repository_full_name=str(repository) if repository else None,
+        )
         return Response(
             {
                 "repository": f"{commit['repository']['full_name']}",
@@ -36,6 +61,7 @@ class SyncGitHubView(APIView):
 class PublishRouteView(APIView):
     def post(self, request):
         module_slug = request.data.get("module_slug")
+        dry_run = _is_truthy(request.data.get("dry_run", False))
         if not module_slug:
             return Response(
                 {"detail": _("module_slug is required.")},
@@ -44,11 +70,11 @@ class PublishRouteView(APIView):
 
         publish_event(
             event_type=GATEWAY_ROUTE_PUBLISH_REQUESTED,
-            data={"module_slug": module_slug},
+            data={"module_slug": module_slug, "dry_run": dry_run},
             producer="apps.gateway.PublishRouteView",
         )
         try:
-            result = ApisixService().publish_route(module_slug)
+            result = ApisixService().publish_route(module_slug, dry_run=dry_run)
         except Exception as exc:
             publish_event(
                 event_type=GATEWAY_ROUTE_PUBLISH_FAILED,
@@ -58,7 +84,11 @@ class PublishRouteView(APIView):
             raise
         publish_event(
             event_type=GATEWAY_ROUTE_PUBLISH_COMPLETED,
-            data={"module_slug": module_slug, "route_id": result.get("route_id")},
+            data={
+                "module_slug": module_slug,
+                "route_id": result.get("route_id"),
+                "dry_run": result.get("dry_run", dry_run),
+            },
             producer="apps.gateway.PublishRouteView",
         )
         return Response(result, status=status.HTTP_201_CREATED)
@@ -81,16 +111,30 @@ class GitHubWebhookView(APIView):
             )
 
         repository = github.repository_full_name(payload)
+        event = request.headers.get("X-GitHub-Event", "unknown")
         expected_repository = github.expected_repository_full_name()
         allowed_repositories = github.allowed_repository_full_names()
         if not github.is_expected_repository(payload):
             return Response(
                 {
                     "ignored": True,
-                    "detail": _("Webhook repository does not match configured repository."),
+                    "detail": _(
+                        "Webhook repository does not match configured repository.",
+                    ),
                     "repository": repository,
                     "expected_repository": expected_repository,
                     "allowed_repositories": allowed_repositories,
+                },
+                status=status.HTTP_202_ACCEPTED,
+            )
+        if not github.is_allowed_event(repository, event):
+            return Response(
+                {
+                    "ignored": True,
+                    "detail": _("Webhook event is not allowed for repository."),
+                    "event": event,
+                    "repository": repository,
+                    "allowed_events": github.allowed_events_for_repository(repository),
                 },
                 status=status.HTTP_202_ACCEPTED,
             )
@@ -99,7 +143,7 @@ class GitHubWebhookView(APIView):
         publish_event(
             event_type=GATEWAY_GITHUB_WEBHOOK_RECEIVED,
             data={
-                "event": request.headers.get("X-GitHub-Event", "unknown"),
+                "event": event,
                 "repository": repository,
                 "module_slugs": module_slugs,
             },
@@ -114,7 +158,10 @@ class GitHubWebhookView(APIView):
                 producer="apps.gateway.GitHubWebhookView",
             )
             try:
-                route_status = ApisixService().publish_route(module_slug)
+                route_status = ApisixService().publish_route(
+                    module_slug,
+                    dry_run=False,
+                )
             except Exception as exc:
                 publish_event(
                     event_type=GATEWAY_ROUTE_PUBLISH_FAILED,
@@ -141,7 +188,7 @@ class GitHubWebhookView(APIView):
 
         return Response(
             {
-                "event": request.headers.get("X-GitHub-Event", "unknown"),
+                "event": event,
                 "repository": repository,
                 "module_slugs": module_slugs,
                 "routes": routes,

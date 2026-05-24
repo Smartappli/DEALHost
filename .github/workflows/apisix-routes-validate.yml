@@ -33,6 +33,7 @@ jobs:
               'module-schema-registry-contracts',
               'module-flink-runtime',
               'module-airflow-orchestration',
+              'module-observability',
               'module-dealdata-core-layer',
               'module-dealdata-gps-layer',
               'module-dealdata-sensor-layer',

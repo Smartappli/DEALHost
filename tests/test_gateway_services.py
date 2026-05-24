@@ -40,6 +40,41 @@ class GitHubServiceTests(SimpleTestCase):
 
         self.assertTrue(GitHubService().is_expected_repository(payload))
 
+    @patch("apps.gateway.services.httpx.get")
+    def test_latest_commit_uses_selected_allowed_repository(self, get_mock):
+        response = Mock()
+        response.json.return_value = {
+            "sha": "sha-test",
+            "repository": {"full_name": "Smartappli/DEALData"},
+            "commit": {"message": "test commit"},
+        }
+        get_mock.return_value = response
+
+        result = GitHubService().latest_commit(
+            branch="main",
+            repository_full_name="Smartappli/DEALData",
+        )
+
+        self.assertEqual(result["sha"], "sha-test")
+        self.assertIn(
+            "/repos/Smartappli/DEALData/commits/main",
+            get_mock.call_args.args[0],
+        )
+        response.raise_for_status.assert_called_once()
+
+    def test_latest_commit_rejects_disallowed_repository(self):
+        with self.assertRaises(ValueError):
+            GitHubService().latest_commit(
+                branch="main",
+                repository_full_name="Other/Repo",
+            )
+
+    def test_allowed_events_are_loaded_from_repository_manifest(self):
+        self.assertEqual(
+            GitHubService().allowed_events_for_repository("Smartappli/DEALIoT"),
+            ("push",),
+        )
+
     def test_module_slugs_for_dealiot_push_changed_paths(self):
         payload = {
             "repository": {"full_name": "Smartappli/DEALIoT"},
@@ -171,6 +206,18 @@ class ApisixServiceTests(TestCase):
             payload["upstream"]["nodes"],
             {"dealdata-gps:7001": 1},
         )
+
+    @patch("apps.gateway.services.httpx.put")
+    def test_publish_route_dry_run_returns_payload_without_calling_apisix(
+        self,
+        put_mock,
+    ):
+        result = ApisixService().publish_route("dealdata-core-layer", dry_run=True)
+
+        self.assertEqual(result["route_id"], "module-dealdata-core-layer")
+        self.assertTrue(result["dry_run"])
+        self.assertEqual(result["payload"]["uri"], "/dealdata/core/*")
+        put_mock.assert_not_called()
 
     @patch("apps.gateway.services.httpx.put")
     def test_publish_route_skips_known_module_without_public_upstream(self, put_mock):

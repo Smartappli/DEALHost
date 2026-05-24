@@ -2,92 +2,80 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import json
 from dataclasses import asdict
+from pathlib import Path
 from typing import Any
 
 import httpx
 from django.conf import settings
-
-DEALIOT_PATH_MODULES = (
-    ("mqtt-kafka-bridge/", "mqtt-kafka-bridge"),
-    ("wildfi-decoder/", "wildfi-decoder"),
-    ("airflow/", "airflow-orchestration"),
-    ("pipelines/", "flink-runtime"),
-    ("flink/", "flink-runtime"),
-    ("beam/", "beam-runtime"),
-    ("apicurio/", "schema-registry-contracts"),
-    ("dealiot_contracts/", "schema-registry-contracts"),
-    ("prometheus/", "observability"),
-    ("grafana/", "observability"),
-    ("deploy/", "dealiot-platform"),
-    ("scripts/", "dealiot-platform"),
-    (".github/workflows/build-and-push-images.yml", "dealiot-platform"),
-    (".github/workflows/compose-deployment-test.yml", "dealiot-platform"),
-    (".github/workflows/production-deployment-test.yml", "dealiot-platform"),
-    ("docker-compose", "dealiot-platform"),
-    (".env.example", "dealiot-platform"),
-)
-DEALDATA_PATH_MODULES = (
-    ("core_layer/", "dealdata-core-layer"),
-    ("gps_layer/", "dealdata-gps-layer"),
-    ("sensor_layer/", "dealdata-sensor-layer"),
-    ("docker-compose", "dealdata-platform"),
-    (".github/", "dealdata-platform"),
-)
-DEALIOT_ROUTE_DEFAULTS = {
-    "schema-registry-contracts": {
-        "public_path": "/dealiot/apicurio",
-        "upstream_host": "apicurio-registry",
-        "upstream_port": 8080,
-    },
-    "flink-runtime": {
-        "public_path": "/dealiot/flink",
-        "upstream_host": "flink-jobmanager",
-        "upstream_port": 8081,
-    },
-    "airflow-orchestration": {
-        "public_path": "/dealiot/airflow",
-        "upstream_host": "airflow-apiserver",
-        "upstream_port": 8080,
-    },
-    "observability": {
-        "public_path": "/dealiot/prometheus",
-        "upstream_host": "prometheus",
-        "upstream_port": 9090,
-    },
-}
-DEALDATA_ROUTE_DEFAULTS = {
-    "dealdata-core-layer": {
-        "public_path": "/dealdata/core",
-        "upstream_host": "dealdata-core",
-        "upstream_port": 7000,
-    },
-    "dealdata-gps-layer": {
-        "public_path": "/dealdata/gps",
-        "upstream_host": "dealdata-gps",
-        "upstream_port": 7001,
-    },
-    "dealdata-sensor-layer": {
-        "public_path": "/dealdata/sensor",
-        "upstream_host": "dealdata-sensor",
-        "upstream_port": 7002,
-    },
-}
-ROUTE_DEFAULTS = {**DEALIOT_ROUTE_DEFAULTS, **DEALDATA_ROUTE_DEFAULTS}
-KNOWN_MODULE_SLUGS = {
-    slug
-    for mapping in (DEALIOT_PATH_MODULES, DEALDATA_PATH_MODULES)
-    for _, slug in mapping
-}
 
 
 def _deduplicate(values: list[str]) -> list[str]:
     return list(dict.fromkeys(values))
 
 
+def _manifest_root() -> Path:
+    return Path(settings.BASE_DIR) / "manifests"
+
+
+def _load_repository_manifests() -> list[dict[str, Any]]:
+    manifests_dir = _manifest_root() / "repositories"
+    if not manifests_dir.exists():
+        return []
+
+    manifests: list[dict[str, Any]] = []
+    for file_path in sorted(manifests_dir.glob("*.json")):
+        with file_path.open(encoding="utf-8") as manifest_file:
+            payload = json.load(manifest_file)
+        if isinstance(payload, dict):
+            manifests.append(payload)
+    return manifests
+
+
+def _manifest_by_repository(
+    manifests: list[dict[str, Any]],
+) -> dict[str, dict[str, Any]]:
+    return {
+        str(manifest.get("repository_full_name", "")).casefold(): manifest
+        for manifest in manifests
+        if manifest.get("repository_full_name")
+    }
+
+
+def _route_defaults_from_manifests(
+    manifests: list[dict[str, Any]],
+) -> dict[str, dict[str, Any]]:
+    route_defaults: dict[str, dict[str, Any]] = {}
+    for manifest in manifests:
+        for route in manifest.get("route_defaults", []):
+            if not isinstance(route, dict):
+                continue
+            module_slug = str(route.get("module_slug", "")).strip()
+            if module_slug:
+                route_defaults[module_slug] = route
+    return route_defaults
+
+
+def _known_module_slugs_from_manifests(manifests: list[dict[str, Any]]) -> set[str]:
+    slugs: set[str] = set()
+    for manifest in manifests:
+        for mapping in manifest.get("path_mappings", []):
+            if isinstance(mapping, dict) and mapping.get("module_slug"):
+                slugs.add(str(mapping["module_slug"]))
+        for route in manifest.get("route_defaults", []):
+            if isinstance(route, dict) and route.get("module_slug"):
+                slugs.add(str(route["module_slug"]))
+    return slugs
+
+
 class GitHubService:
     def __init__(self) -> None:
         self.config = settings.GITHUB
+        self.repository_manifests = _load_repository_manifests()
+        self.repository_manifest_map = _manifest_by_repository(
+            self.repository_manifests,
+        )
 
     def headers(self) -> dict[str, str]:
         return {
@@ -96,11 +84,18 @@ class GitHubService:
             "X-GitHub-Api-Version": "2022-11-28",
         }
 
-    def latest_commit(self, branch: str = "main") -> dict:
-        url = (
-            f"https://api.github.com/repos/{self.config.owner}/"
-            f"{self.config.repository}/commits/{branch}"
-        )
+    def latest_commit(
+        self,
+        branch: str = "main",
+        repository_full_name: str | None = None,
+    ) -> dict:
+        repository = repository_full_name or self.expected_repository_full_name()
+        if not self.is_allowed_repository_full_name(repository):
+            msg = f"Repository is not allowed: {repository}"
+            raise ValueError(msg)
+
+        owner, repository_name = repository.split("/", maxsplit=1)
+        url = f"https://api.github.com/repos/{owner}/{repository_name}/commits/{branch}"
         response = httpx.get(url, headers=self.headers(), timeout=15)
         response.raise_for_status()
         return response.json()
@@ -125,6 +120,32 @@ class GitHubService:
             self.expected_repository_full_name(),
         )
 
+    def is_allowed_repository_full_name(self, repository: str) -> bool:
+        allowed = self.allowed_repository_full_names()
+        return bool(repository) and any(
+            repository.casefold() == candidate.casefold()
+            for candidate in allowed
+        )
+
+    def repository_manifest(self, repository: str) -> dict[str, Any] | None:
+        return self.repository_manifest_map.get(repository.casefold())
+
+    def allowed_events_for_repository(self, repository: str) -> tuple[str, ...]:
+        manifest = self.repository_manifest(repository)
+        if not manifest:
+            return ("push",)
+        allowed_events = manifest.get("allowed_events", ["push"])
+        if not isinstance(allowed_events, list):
+            return ("push",)
+        return tuple(str(event) for event in allowed_events if event)
+
+    def is_allowed_event(self, repository: str, event: str) -> bool:
+        allowed_events = self.allowed_events_for_repository(repository)
+        return any(
+            event.casefold() == candidate.casefold()
+            for candidate in allowed_events
+        )
+
     def repository_full_name(self, payload: dict[str, Any]) -> str:
         repository = payload.get("repository")
         if not isinstance(repository, dict):
@@ -134,11 +155,7 @@ class GitHubService:
 
     def is_expected_repository(self, payload: dict[str, Any]) -> bool:
         repository = self.repository_full_name(payload)
-        allowed = self.allowed_repository_full_names()
-        return bool(repository) and any(
-            repository.casefold() == candidate.casefold()
-            for candidate in allowed
-        )
+        return self.is_allowed_repository_full_name(repository)
 
     def changed_paths(self, payload: dict[str, Any]) -> list[str]:
         paths: list[str] = []
@@ -161,16 +178,20 @@ class GitHubService:
 
     def module_slug_for_path(self, path: str, repository: str = "") -> str | None:
         normalized = path.replace("\\", "/").lstrip("/")
-        mappings = []
-        if repository.casefold() == "smartappli/dealdata":
-            mappings = [DEALDATA_PATH_MODULES]
-        elif repository.casefold() == "smartappli/dealiot":
-            mappings = [DEALIOT_PATH_MODULES]
+        repository_manifest = self.repository_manifest(repository)
+        if repository_manifest:
+            manifests = [repository_manifest]
         else:
-            mappings = [DEALIOT_PATH_MODULES, DEALDATA_PATH_MODULES]
+            manifests = self.repository_manifests
 
-        for mapping in mappings:
-            for prefix, slug in mapping:
+        for manifest in manifests:
+            for mapping in manifest.get("path_mappings", []):
+                if not isinstance(mapping, dict):
+                    continue
+                prefix = str(mapping.get("prefix", ""))
+                slug = str(mapping.get("module_slug", ""))
+                if not prefix or not slug:
+                    continue
                 if normalized == prefix.rstrip("/") or normalized.startswith(prefix):
                     return slug
         return None
@@ -208,13 +229,34 @@ class GitHubService:
 class ApisixService:
     def __init__(self) -> None:
         self.config = settings.APISIX
+        self.repository_manifests = _load_repository_manifests()
+        self.route_defaults = _route_defaults_from_manifests(
+            self.repository_manifests,
+        )
+        self.known_module_slugs = _known_module_slugs_from_manifests(
+            self.repository_manifests,
+        )
 
-    def publish_route(self, module_slug: str) -> dict:
+    def _skip_without_public_upstream(
+        self,
+        route_id: str,
+        dry_run: bool,
+    ) -> dict:
+        return {
+            "route_id": route_id,
+            "skipped": True,
+            "dry_run": dry_run,
+            "reason": "module has no public upstream",
+            "payload": None,
+            "response": None,
+        }
+
+    def publish_route(self, module_slug: str, dry_run: bool = False) -> dict:
         route_id = f"module-{module_slug}"
         public_path = f"/{module_slug}"
         upstream_host = self.config.upstream_host
         upstream_port = self.config.upstream_port
-        default_route = ROUTE_DEFAULTS.get(module_slug)
+        default_route = self.route_defaults.get(module_slug)
         if default_route:
             public_path = str(default_route["public_path"])
             upstream_host = str(default_route["upstream_host"])
@@ -230,33 +272,15 @@ class ApisixService:
                     or not module.upstream_host
                     or module.upstream_port is None
                 ):
-                    return {
-                        "route_id": route_id,
-                        "skipped": True,
-                        "reason": "module has no public upstream",
-                        "payload": None,
-                        "response": None,
-                    }
+                    return self._skip_without_public_upstream(route_id, dry_run)
                 public_path = module.public_path or public_path
                 upstream_host = module.upstream_host or upstream_host
                 upstream_port = module.upstream_port or upstream_port
-            elif module_slug in KNOWN_MODULE_SLUGS and default_route is None:
-                return {
-                    "route_id": route_id,
-                    "skipped": True,
-                    "reason": "module has no public upstream",
-                    "payload": None,
-                    "response": None,
-                }
+            elif module_slug in self.known_module_slugs and default_route is None:
+                return self._skip_without_public_upstream(route_id, dry_run)
         except Exception:
-            if module_slug in KNOWN_MODULE_SLUGS and default_route is None:
-                return {
-                    "route_id": route_id,
-                    "skipped": True,
-                    "reason": "module has no public upstream",
-                    "payload": None,
-                    "response": None,
-                }
+            if module_slug in self.known_module_slugs and default_route is None:
+                return self._skip_without_public_upstream(route_id, dry_run)
 
         public_path = "/" + public_path.strip("/")
         payload = {
@@ -269,11 +293,24 @@ class ApisixService:
                 },
             },
         }
+        if dry_run:
+            return {
+                "route_id": route_id,
+                "dry_run": True,
+                "payload": payload,
+                "response": None,
+            }
+
         url = f"{self.config.admin_url}/apisix/admin/routes/{route_id}"
         headers = {"X-API-KEY": self.config.admin_key}
         response = httpx.put(url, headers=headers, json=payload, timeout=15)
         response.raise_for_status()
-        return {"route_id": route_id, "payload": payload, "response": response.json()}
+        return {
+            "route_id": route_id,
+            "dry_run": False,
+            "payload": payload,
+            "response": response.json(),
+        }
 
     def describe(self) -> dict:
         return asdict(self.config)
