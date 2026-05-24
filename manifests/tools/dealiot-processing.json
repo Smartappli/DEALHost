@@ -4,6 +4,7 @@
   "description": "Traitements streaming et batch DEALIoT bases sur Flink et Airflow.",
   "module_slugs": [
     "flink-runtime",
+    "beam-runtime",
     "airflow-orchestration"
   ],
   "version": "0.1.0",
