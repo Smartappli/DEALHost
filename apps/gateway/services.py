@@ -14,7 +14,7 @@ DEALIOT_PATH_MODULES = (
     ("airflow/", "airflow-orchestration"),
     ("pipelines/", "flink-runtime"),
     ("flink/", "flink-runtime"),
-    ("beam/", "flink-runtime"),
+    ("beam/", "beam-runtime"),
     ("apicurio/", "schema-registry-contracts"),
     ("dealiot_contracts/", "schema-registry-contracts"),
     ("prometheus/", "observability"),
