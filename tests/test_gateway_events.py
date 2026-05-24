@@ -42,6 +42,10 @@ class GatewayEventPublishingTests(SimpleTestCase):
         github.verify_signature.return_value = True
         github.repository_full_name.return_value = "Smartappli/DEALIoT"
         github.expected_repository_full_name.return_value = "Smartappli/DEALIoT"
+        github.allowed_repository_full_names.return_value = (
+            "Smartappli/DEALIoT",
+            "Smartappli/DEALData",
+        )
         github.is_expected_repository.return_value = True
         github.module_slugs_for_webhook.return_value = ["mqtt-kafka-bridge"]
         github_service_cls.return_value = github
@@ -86,6 +90,10 @@ class GatewayEventPublishingTests(SimpleTestCase):
         github.verify_signature.return_value = True
         github.repository_full_name.return_value = "Other/Repo"
         github.expected_repository_full_name.return_value = "Smartappli/DEALIoT"
+        github.allowed_repository_full_names.return_value = (
+            "Smartappli/DEALIoT",
+            "Smartappli/DEALData",
+        )
         github.is_expected_repository.return_value = False
         github_service_cls.return_value = github
 

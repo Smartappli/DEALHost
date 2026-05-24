@@ -33,6 +33,9 @@ jobs:
               'module-schema-registry-contracts',
               'module-flink-runtime',
               'module-airflow-orchestration',
+              'module-dealdata-core-layer',
+              'module-dealdata-gps-layer',
+              'module-dealdata-sensor-layer',
           }
           assert routes, 'No APISIX route found in infra/apisix/routes.json'
           missing = sorted(required - route_ids)

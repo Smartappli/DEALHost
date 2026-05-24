@@ -15,6 +15,7 @@ from dealhost.settings.env import ApisixConfig, GitHubConfig
         repository="DEALIoT",
         token="token",
         webhook_secret="secret-test",
+        allowed_repositories=("Smartappli/DEALIoT", "Smartappli/DEALData"),
     ),
 )
 class GitHubServiceTests(SimpleTestCase):
@@ -31,6 +32,11 @@ class GitHubServiceTests(SimpleTestCase):
 
     def test_expected_repository_matches_dealiot_payload(self):
         payload = {"repository": {"full_name": "Smartappli/DEALIoT"}}
+
+        self.assertTrue(GitHubService().is_expected_repository(payload))
+
+    def test_expected_repository_matches_dealdata_payload(self):
+        payload = {"repository": {"full_name": "Smartappli/DEALData"}}
 
         self.assertTrue(GitHubService().is_expected_repository(payload))
 
@@ -69,6 +75,30 @@ class GitHubServiceTests(SimpleTestCase):
             ["flink-runtime"],
         )
 
+    def test_module_slugs_for_dealdata_push_changed_paths(self):
+        payload = {
+            "repository": {"full_name": "Smartappli/DEALData"},
+            "commits": [
+                {
+                    "modified": [
+                        "core_layer/core_data/models.py",
+                        "gps_layer/gps_data/models.py",
+                    ],
+                    "added": ["sensor_layer/sensor_data/models.py"],
+                    "removed": [],
+                },
+            ],
+        }
+
+        self.assertEqual(
+            set(GitHubService().module_slugs_for_webhook(payload)),
+            {
+                "dealdata-core-layer",
+                "dealdata-gps-layer",
+                "dealdata-sensor-layer",
+            },
+        )
+
 
 @override_settings(
     APISIX=ApisixConfig(
@@ -105,7 +135,10 @@ class ApisixServiceTests(TestCase):
         response.raise_for_status.assert_called_once()
 
     @patch("apps.gateway.services.httpx.put")
-    def test_publish_route_uses_dealiot_default_route_when_module_missing(self, put_mock):
+    def test_publish_route_uses_dealiot_default_route_when_module_missing(
+        self,
+        put_mock,
+    ):
         response = Mock()
         response.json.return_value = {"ok": True}
         put_mock.return_value = response
@@ -118,6 +151,25 @@ class ApisixServiceTests(TestCase):
         self.assertEqual(
             payload["upstream"]["nodes"],
             {"apicurio-registry:8080": 1},
+        )
+
+    @patch("apps.gateway.services.httpx.put")
+    def test_publish_route_uses_dealdata_default_route_when_module_missing(
+        self,
+        put_mock,
+    ):
+        response = Mock()
+        response.json.return_value = {"ok": True}
+        put_mock.return_value = response
+
+        result = ApisixService().publish_route("dealdata-gps-layer")
+
+        self.assertEqual(result["route_id"], "module-dealdata-gps-layer")
+        payload = put_mock.call_args.kwargs["json"]
+        self.assertEqual(payload["uri"], "/dealdata/gps/*")
+        self.assertEqual(
+            payload["upstream"]["nodes"],
+            {"dealdata-gps:7001": 1},
         )
 
     @patch("apps.gateway.services.httpx.put")

@@ -82,6 +82,7 @@ class GitHubWebhookView(APIView):
 
         repository = github.repository_full_name(payload)
         expected_repository = github.expected_repository_full_name()
+        allowed_repositories = github.allowed_repository_full_names()
         if not github.is_expected_repository(payload):
             return Response(
                 {
@@ -89,6 +90,7 @@ class GitHubWebhookView(APIView):
                     "detail": _("Webhook repository does not match configured repository."),
                     "repository": repository,
                     "expected_repository": expected_repository,
+                    "allowed_repositories": allowed_repositories,
                 },
                 status=status.HTTP_202_ACCEPTED,
             )

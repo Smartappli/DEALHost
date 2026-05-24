@@ -1,6 +1,6 @@
 # DEALHost — Architecture d’hébergement modulaire (Django 6 + APISIX + GitHub)
 
-Ce dépôt contient un socle **Django 6 ASGI** (servi par **Granian**) pour exposer une plateforme d’hébergement modulaire reliée au dépôt GitHub **`Smartappli/DEALIoT`** et pilotée via **Apache APISIX**.
+Ce dépôt contient un socle **Django 6 ASGI** (servi par **Granian**) pour exposer une plateforme d’hébergement modulaire reliée aux dépôts GitHub **`Smartappli/DEALIoT`** et **`Smartappli/DEALData`**, pilotée via **Apache APISIX**.
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Smartappli_DEALHost&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Smartappli_DEALHost)
 [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=Smartappli_DEALHost&metric=bugs)](https://sonarcloud.io/summary/new_code?id=Smartappli_DEALHost)
@@ -25,7 +25,7 @@ Ce dépôt contient un socle **Django 6 ASGI** (servi par **Granian**) pour expo
 ## Architecture proposée
 
 ```text
-GitHub (Smartappli/DEALIoT)
+GitHub (Smartappli/DEALIoT, Smartappli/DEALData)
         │
         │ webhook / API
         ▼
@@ -267,6 +267,7 @@ System.out.println(response);
 - Remplacer toutes les valeurs `replace-me` / placeholders.
 - Restreindre `ALLOWED_HOSTS` et exposer uniquement APISIX en edge.
 - Protéger le webhook GitHub avec `GITHUB_WEBHOOK_SECRET`.
+- Restreindre les webhooks acceptés avec `GITHUB_ALLOWED_REPOSITORIES` (défaut: `Smartappli/DEALIoT,Smartappli/DEALData`).
 - Externaliser SQLite vers PostgreSQL en environnement de production.
 - Sessions en backend `cached_db` (persistance DB + cache Valkey pour performance).
 
@@ -301,7 +302,7 @@ System.out.println(response);
 
 - `CI Django DEALHost` (`.github/workflows/ci.yml`) : exécute une matrice multi-plateforme (Linux/macOS/Windows) et multi-versions Python (3.12 à 3.14). Le projet cible Python >=3.12 : les jobs 3.12/3.13/3.14 installent d'abord `requirements.txt` puis le package (`uv pip install --system -r requirements.txt` puis `uv pip install --system -e .`), vérifient les migrations, exécutent les tests unitaires sous couverture (`uv run coverage run --source=apps,dealhost,sdk manage.py test tests --verbosity 2`), exportent `coverage.xml` et lancent le contrôle de compilation.
 - `SonarCloud` (`.github/workflows/sonarcloud.yml`) : exécute les tests avec couverture sur Ubuntu + Python 3.12 puis lance l'analyse SonarCloud (`SonarSource/sonarqube-scan-action@v6`) à partir du fichier `sonar-project.properties`.
-- `Validate APISIX Routes` (`.github/workflows/apisix-routes-validate.yml`) : valide la syntaxe JSON des routes APISIX et vérifie la présence des routes coeur et DEALIoT attendues.
+- `Validate APISIX Routes` (`.github/workflows/apisix-routes-validate.yml`) : valide la syntaxe JSON des routes APISIX et vérifie la présence des routes coeur, DEALIoT et DEALData attendues.
 - `Pre-commit` (`.github/workflows/pre-commit.yml`) : installe `pre-commit` via `uv` puis exécute `uv run pre-commit run --all-files --show-diff-on-failure` (incluant Ruff en mode `--select ALL` et `ruff-format`).
 
 ## Dependency Automation

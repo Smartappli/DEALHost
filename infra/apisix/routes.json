@@ -54,6 +54,39 @@
           "prometheus:9090": 1
         }
       }
+    },
+    {
+      "id": "module-dealdata-core-layer",
+      "uri": "/dealdata/core/*",
+      "name": "module-dealdata-core-layer",
+      "upstream": {
+        "type": "roundrobin",
+        "nodes": {
+          "dealdata-core:7000": 1
+        }
+      }
+    },
+    {
+      "id": "module-dealdata-gps-layer",
+      "uri": "/dealdata/gps/*",
+      "name": "module-dealdata-gps-layer",
+      "upstream": {
+        "type": "roundrobin",
+        "nodes": {
+          "dealdata-gps:7001": 1
+        }
+      }
+    },
+    {
+      "id": "module-dealdata-sensor-layer",
+      "uri": "/dealdata/sensor/*",
+      "name": "module-dealdata-sensor-layer",
+      "upstream": {
+        "type": "roundrobin",
+        "nodes": {
+          "dealdata-sensor:7002": 1
+        }
+      }
     }
   ]
 }

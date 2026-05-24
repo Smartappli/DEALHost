@@ -27,6 +27,13 @@ DEALIOT_PATH_MODULES = (
     ("docker-compose", "dealiot-platform"),
     (".env.example", "dealiot-platform"),
 )
+DEALDATA_PATH_MODULES = (
+    ("core_layer/", "dealdata-core-layer"),
+    ("gps_layer/", "dealdata-gps-layer"),
+    ("sensor_layer/", "dealdata-sensor-layer"),
+    ("docker-compose", "dealdata-platform"),
+    (".github/", "dealdata-platform"),
+)
 DEALIOT_ROUTE_DEFAULTS = {
     "schema-registry-contracts": {
         "public_path": "/dealiot/apicurio",
@@ -49,7 +56,29 @@ DEALIOT_ROUTE_DEFAULTS = {
         "upstream_port": 9090,
     },
 }
-DEALIOT_MODULE_SLUGS = {slug for _, slug in DEALIOT_PATH_MODULES}
+DEALDATA_ROUTE_DEFAULTS = {
+    "dealdata-core-layer": {
+        "public_path": "/dealdata/core",
+        "upstream_host": "dealdata-core",
+        "upstream_port": 7000,
+    },
+    "dealdata-gps-layer": {
+        "public_path": "/dealdata/gps",
+        "upstream_host": "dealdata-gps",
+        "upstream_port": 7001,
+    },
+    "dealdata-sensor-layer": {
+        "public_path": "/dealdata/sensor",
+        "upstream_host": "dealdata-sensor",
+        "upstream_port": 7002,
+    },
+}
+ROUTE_DEFAULTS = {**DEALIOT_ROUTE_DEFAULTS, **DEALDATA_ROUTE_DEFAULTS}
+KNOWN_MODULE_SLUGS = {
+    slug
+    for mapping in (DEALIOT_PATH_MODULES, DEALDATA_PATH_MODULES)
+    for _, slug in mapping
+}
 
 
 def _deduplicate(values: list[str]) -> list[str]:
@@ -91,6 +120,11 @@ class GitHubService:
     def expected_repository_full_name(self) -> str:
         return f"{self.config.owner}/{self.config.repository}"
 
+    def allowed_repository_full_names(self) -> tuple[str, ...]:
+        return self.config.allowed_repositories or (
+            self.expected_repository_full_name(),
+        )
+
     def repository_full_name(self, payload: dict[str, Any]) -> str:
         repository = payload.get("repository")
         if not isinstance(repository, dict):
@@ -100,8 +134,11 @@ class GitHubService:
 
     def is_expected_repository(self, payload: dict[str, Any]) -> bool:
         repository = self.repository_full_name(payload)
-        expected = self.expected_repository_full_name()
-        return bool(repository) and repository.casefold() == expected.casefold()
+        allowed = self.allowed_repository_full_names()
+        return bool(repository) and any(
+            repository.casefold() == candidate.casefold()
+            for candidate in allowed
+        )
 
     def changed_paths(self, payload: dict[str, Any]) -> list[str]:
         paths: list[str] = []
@@ -122,12 +159,33 @@ class GitHubService:
 
         return sorted(_deduplicate(paths))
 
-    def module_slug_for_path(self, path: str) -> str | None:
+    def module_slug_for_path(self, path: str, repository: str = "") -> str | None:
         normalized = path.replace("\\", "/").lstrip("/")
-        for prefix, slug in DEALIOT_PATH_MODULES:
-            if normalized == prefix.rstrip("/") or normalized.startswith(prefix):
-                return slug
+        mappings = []
+        if repository.casefold() == "smartappli/dealdata":
+            mappings = [DEALDATA_PATH_MODULES]
+        elif repository.casefold() == "smartappli/dealiot":
+            mappings = [DEALIOT_PATH_MODULES]
+        else:
+            mappings = [DEALIOT_PATH_MODULES, DEALDATA_PATH_MODULES]
+
+        for mapping in mappings:
+            for prefix, slug in mapping:
+                if normalized == prefix.rstrip("/") or normalized.startswith(prefix):
+                    return slug
         return None
+
+    def module_slugs_for_paths(
+        self,
+        paths: list[str],
+        repository: str = "",
+    ) -> list[str]:
+        slugs = [
+            slug
+            for path in paths
+            if (slug := self.module_slug_for_path(path, repository=repository))
+        ]
+        return _deduplicate(slugs)
 
     def module_slugs_for_webhook(self, payload: dict[str, Any]) -> list[str]:
         explicit_slug = payload.get("module_slug")
@@ -140,12 +198,11 @@ class GitHubService:
                 [str(slug).strip() for slug in explicit_slugs if str(slug).strip()],
             )
 
-        slugs = [
-            slug
-            for path in self.changed_paths(payload)
-            if (slug := self.module_slug_for_path(path))
-        ]
-        return _deduplicate(slugs)
+        repository = self.repository_full_name(payload)
+        return self.module_slugs_for_paths(
+            self.changed_paths(payload),
+            repository=repository,
+        )
 
 
 class ApisixService:
@@ -157,7 +214,7 @@ class ApisixService:
         public_path = f"/{module_slug}"
         upstream_host = self.config.upstream_host
         upstream_port = self.config.upstream_port
-        default_route = DEALIOT_ROUTE_DEFAULTS.get(module_slug)
+        default_route = ROUTE_DEFAULTS.get(module_slug)
         if default_route:
             public_path = str(default_route["public_path"])
             upstream_host = str(default_route["upstream_host"])
@@ -183,20 +240,20 @@ class ApisixService:
                 public_path = module.public_path or public_path
                 upstream_host = module.upstream_host or upstream_host
                 upstream_port = module.upstream_port or upstream_port
-            elif module_slug in DEALIOT_MODULE_SLUGS and default_route is None:
+            elif module_slug in KNOWN_MODULE_SLUGS and default_route is None:
                 return {
                     "route_id": route_id,
                     "skipped": True,
-                    "reason": "DEALIoT module has no public upstream",
+                    "reason": "module has no public upstream",
                     "payload": None,
                     "response": None,
                 }
         except Exception:
-            if module_slug in DEALIOT_MODULE_SLUGS and default_route is None:
+            if module_slug in KNOWN_MODULE_SLUGS and default_route is None:
                 return {
                     "route_id": route_id,
                     "skipped": True,
-                    "reason": "DEALIoT module has no public upstream",
+                    "reason": "module has no public upstream",
                     "payload": None,
                     "response": None,
                 }

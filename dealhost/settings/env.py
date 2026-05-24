@@ -10,6 +10,7 @@ class GitHubConfig:
     repository: str
     token: str
     webhook_secret: str
+    allowed_repositories: tuple[str, ...]
 
 
 @dataclass(frozen=True)
@@ -40,12 +41,24 @@ def get_env(name: str, default: str | None = None) -> str:
     return value
 
 
+def get_csv_env(name: str, default: str) -> tuple[str, ...]:
+    return tuple(
+        item.strip()
+        for item in get_env(name, default).split(",")
+        if item.strip()
+    )
+
+
 def github_config() -> GitHubConfig:
     return GitHubConfig(
         owner=get_env("GITHUB_OWNER", "Smartappli"),
         repository=get_env("GITHUB_REPOSITORY", "DEALIoT"),
         token=get_env("GITHUB_TOKEN", "replace-me"),
         webhook_secret=get_env("GITHUB_WEBHOOK_SECRET", "replace-me"),
+        allowed_repositories=get_csv_env(
+            "GITHUB_ALLOWED_REPOSITORIES",
+            "Smartappli/DEALIoT,Smartappli/DEALData",
+        ),
     )
 
 
