@@ -11,7 +11,7 @@ updates:
       time: "06:00"
       timezone: "Europe/Brussels"
     open-pull-requests-limit: 3
-    labels: ["dependencies", "dependabot", "python", "runtime"]
+    labels: ["dependencies", "dependabot", "python", "runtime", "runtime-risk"]
     commit-message:
       prefix: "deps(python-runtime)"
     groups:
@@ -107,7 +107,7 @@ updates:
       time: "06:00"
       timezone: "Europe/Brussels"
     open-pull-requests-limit: 2
-    labels: ["dependencies", "dependabot", "docker-compose"]
+    labels: ["dependencies", "dependabot", "docker-compose", "runtime-risk"]
     commit-message:
       prefix: "deps(compose)"
 
@@ -119,7 +119,7 @@ updates:
       time: "06:30"
       timezone: "Europe/Brussels"
     open-pull-requests-limit: 3
-    labels: ["dependencies", "dependabot", "github-actions", "ci"]
+    labels: ["dependencies", "dependabot", "github-actions", "ci", "runtime-risk"]
     commit-message:
       prefix: "deps(actions)"
     groups:

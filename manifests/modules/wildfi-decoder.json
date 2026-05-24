@@ -11,5 +11,6 @@
     "raw.sensor",
     "raw.gps"
   ],
+  "production_ready": false,
   "enabled": true
 }

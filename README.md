@@ -211,11 +211,12 @@ System.out.println(response);
   - `manifests/tools/*.json`
   - `manifests/applications/*.json`
   - `manifests/repositories/*.json`
-- Champs attendus pour les modules: `name`, `slug`, `image`, `branch` (optionnel), `repository_owner` (optionnel), `repository_name` (optionnel), `source_path` (optionnel), `deployment_target` (optionnel), `public_path` (optionnel), `upstream_host` (optionnel), `upstream_port` (optionnel), `healthcheck_path` (optionnel), `contract_topics` (optionnel), `enabled` (optionnel).
+- Champs attendus pour les modules: `name`, `slug`, `image`, `branch` (optionnel), `repository_owner` (optionnel), `repository_name` (optionnel), `source_path` (optionnel), `deployment_target` (optionnel), `public_path` (optionnel), `upstream_host` (optionnel), `upstream_port` (optionnel), `healthcheck_path` (optionnel), `contract_topics` (optionnel), `production_ready` (optionnel), `enabled` (optionnel).
 - Champs attendus pour les tools/applications: `name`, `slug`, `description` (optionnel), `enabled` (optionnel), `module_slugs` (optionnel), `version` (optionnel, semver), `version_notes` (optionnel).
 - Champs attendus pour les repositories: `repository_full_name`, `allowed_events`, `path_mappings` (`prefix`, `module_slug`) et `route_defaults` (`module_slug`, `public_path`, `upstream_host`, `upstream_port`).
 - L’auto découverte crée/met à jour automatiquement les objets `Module`, `Tool` et `HostedApplication`, synchronise leurs liens modules, et enregistre l'historique des versions quand `version` est fourni.
 - Les manifests repositories pilotent le mapping webhook GitHub -> modules et les routes APISIX par défaut; ils ne créent pas d'objets en base.
+- Tout `source_path` rattaché à `Smartappli/DEALIoT` ou `Smartappli/DEALData` doit être couvert par un `path_mappings` du manifest repository correspondant.
 
 ### Internationalisation de l’interface
 
@@ -314,13 +315,15 @@ System.out.println(response);
 - `CI Django DEALHost` (`.github/workflows/ci.yml`) : exécute une matrice multi-plateforme (Linux/macOS/Windows) et multi-versions Python (3.12 à 3.14). Le projet cible Python >=3.12 : les jobs 3.12/3.13/3.14 installent d'abord `requirements.txt` puis le package (`uv pip install --system -r requirements.txt` puis `uv pip install --system -e .`), vérifient les migrations, exécutent les tests unitaires sous couverture (`uv run coverage run --source=apps,dealhost,sdk manage.py test tests --verbosity 2`), exportent `coverage.xml` et lancent le contrôle de compilation.
 - `SonarCloud` (`.github/workflows/sonarcloud.yml`) : exécute les tests avec couverture sur Ubuntu + Python 3.12 puis lance l'analyse SonarCloud (`SonarSource/sonarqube-scan-action@v6`) à partir du fichier `sonar-project.properties`.
 - `Validate APISIX Routes` (`.github/workflows/apisix-routes-validate.yml`) : valide la syntaxe JSON des routes APISIX et vérifie la présence des routes coeur, DEALIoT et DEALData attendues.
-- `Validate Hosting Manifests` (`.github/workflows/hosting-manifests-validate.yml`) : valide la cohérence des manifests modules/tools/applications/repositories, des routes APISIX et du scan Renovate des images.
+- `Validate Hosting Manifests` (`.github/workflows/hosting-manifests-validate.yml`) : valide la cohérence des manifests modules/tools/applications/repositories, des routes APISIX, du scan Renovate des images, et applique en mode strict la politique de tags Docker pour les modules `production_ready=true`.
 - `Pre-commit` (`.github/workflows/pre-commit.yml`) : installe `pre-commit` via `uv` puis exécute `uv run pre-commit run --all-files --show-diff-on-failure` (incluant Ruff en mode `--select ALL` et `ruff-format`).
 
 ## Dependency Automation
 
-- `Dependabot` est configuré via `.github/dependabot.yml` pour surveiller chaque semaine les dépendances Python, Rust, Go, Docker Compose et GitHub Actions.
-- `Renovate` est conservé pour les manifests non standard `manifests/modules/*.json`, avec scan regex des images Docker et approbation obligatoire des majors via Dependency Dashboard.
+- `Dependabot` est configuré via `.github/dependabot.yml` pour surveiller chaque semaine les dépendances Python, Rust, Go, Docker Compose et GitHub Actions. Les updates runtime (`pip` racine, Compose, GitHub Actions) portent le label `runtime-risk`.
+- `Renovate` est conservé pour les manifests non standard `manifests/modules/*.json`, avec scan regex des images Docker, labels séparés pour `smartappli-ghcr` et `public-image`, et approbation obligatoire des majors via Dependency Dashboard.
+- Le workflow Renovate utilise `secrets.RENOVATE_TOKEN` si disponible, puis le token GitHub du workflow en repli. Un token dédié reste recommandé pour éviter les limites de permissions et de déclenchement.
+- Les tags Docker `latest`, implicites ou `local-placeholder` doivent rester associés à `production_ready=false`; les modules prêts production doivent utiliser un tag explicite ou un digest.
 
 
 ## Datasets accessibles dans le dashboard

@@ -15,5 +15,6 @@
     "observed_objects",
     "experiments"
   ],
+  "production_ready": false,
   "enabled": true
 }

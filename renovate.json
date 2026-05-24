@@ -4,6 +4,7 @@
   "timezone": "Europe/Brussels",
   "labels": ["dependencies", "renovate"],
   "prConcurrentLimit": 3,
+  "dependencyDashboard": true,
   "enabledManagers": ["custom.regex"],
   "customManagers": [
     {
@@ -21,6 +22,30 @@
       "matchManagers": ["custom.regex"],
       "groupName": "hosting manifest images",
       "labels": ["dependencies", "renovate", "hosting-manifest"]
+    },
+    {
+      "matchManagers": ["custom.regex"],
+      "matchPackageNames": ["ghcr.io/smartappli/**"],
+      "labels": [
+        "dependencies",
+        "renovate",
+        "hosting-manifest",
+        "smartappli-ghcr"
+      ]
+    },
+    {
+      "matchManagers": ["custom.regex"],
+      "matchPackageNames": [
+        "apicurio/apicurio-registry",
+        "prom/prometheus",
+        "ghcr.io/dealiot/**"
+      ],
+      "labels": [
+        "dependencies",
+        "renovate",
+        "hosting-manifest",
+        "public-image"
+      ]
     },
     {
       "matchUpdateTypes": ["major"],

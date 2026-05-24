@@ -25,3 +25,8 @@ jobs:
 
       - name: Validate hosting manifests
         run: python scripts/validate_hosting_manifests.py
+
+      - name: Validate production image policy
+        env:
+          HOSTING_MANIFEST_STRICT_IMAGES: "true"
+        run: python scripts/validate_hosting_manifests.py

@@ -6,5 +6,6 @@
   "deployment_target": "compose",
   "public_path": "/core",
   "upstream_host": "django-app",
-  "upstream_port": 8000
+  "upstream_port": 8000,
+  "production_ready": false
 }

@@ -11,5 +11,6 @@
   "upstream_host": "airflow-apiserver",
   "upstream_port": 8080,
   "healthcheck_path": "/api/v2/monitor/health",
+  "production_ready": false,
   "enabled": true
 }

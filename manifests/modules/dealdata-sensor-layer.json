@@ -15,5 +15,6 @@
     "sensor_data",
     "sensor_observed_objects"
   ],
+  "production_ready": false,
   "enabled": true
 }

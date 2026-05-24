@@ -16,5 +16,6 @@
     "raw.video3d.meta",
     "dlq.events"
   ],
+  "production_ready": false,
   "enabled": true
 }

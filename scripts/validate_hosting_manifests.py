@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -11,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 MANIFESTS_DIR = ROOT / "manifests"
 APISIX_ROUTES_FILE = ROOT / "infra" / "apisix" / "routes.json"
 RENOVATE_FILE = ROOT / "renovate.json"
+UNPINNED_IMAGE_TAGS = {"latest", "local-placeholder"}
 
 
 def _load_json(path: Path, errors: list[str]) -> dict[str, Any]:
@@ -88,6 +90,44 @@ def _module_repository_full_name(payload: dict[str, Any]) -> str:
     return ""
 
 
+def _is_false(value: Any) -> bool:
+    if isinstance(value, bool):
+        return not value
+    return str(value).strip().casefold() in {"0", "false", "no", "off"}
+
+
+def _image_tag(image: str) -> str:
+    if "@" in image:
+        return "digest"
+    if ":" not in image.rsplit("/", maxsplit=1)[-1]:
+        return "latest"
+    return image.rsplit(":", maxsplit=1)[-1]
+
+
+def _is_source_path_covered(
+    source_path: str,
+    module_slug: str,
+    mappings: list[dict[str, Any]],
+) -> bool:
+    normalized = source_path.strip().replace("\\", "/").strip("/")
+    if not normalized or normalized == ".":
+        return any(
+            str(mapping.get("module_slug", "")).strip() == module_slug
+            for mapping in mappings
+        )
+
+    normalized_with_slash = f"{normalized}/"
+    for mapping in mappings:
+        if str(mapping.get("module_slug", "")).strip() != module_slug:
+            continue
+        prefix = str(mapping.get("prefix", "")).replace("\\", "/").lstrip("/")
+        if prefix.rstrip("/") == normalized or prefix.startswith(normalized_with_slash):
+            return True
+        if normalized_with_slash.startswith(prefix):
+            return True
+    return False
+
+
 def _route_id_for_module(module_slug: str) -> str:
     if module_slug.startswith("module-"):
         return module_slug
@@ -96,16 +136,29 @@ def _route_id_for_module(module_slug: str) -> str:
 
 def _validate_modules(
     errors: list[str],
-) -> tuple[set[str], dict[str, dict[str, Any]], dict[str, str]]:
+    warnings: list[str],
+) -> tuple[
+    set[str],
+    dict[str, dict[str, Any]],
+    dict[str, str],
+    dict[str, str],
+]:
     module_slugs: set[str] = set()
     public_modules: dict[str, dict[str, Any]] = {}
     module_repositories: dict[str, str] = {}
+    module_source_paths: dict[str, str] = {}
+    strict_images = os.getenv("HOSTING_MANIFEST_STRICT_IMAGES", "").casefold() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
 
     for path in _json_files(MANIFESTS_DIR / "modules"):
         payload = _load_json(path, errors)
         name = _required_string(payload, path, "name", errors)
         slug = _required_string(payload, path, "slug", errors)
-        _required_string(payload, path, "image", errors)
+        image = _required_string(payload, path, "image", errors)
         if not name or not slug:
             continue
         if slug in module_slugs:
@@ -116,12 +169,28 @@ def _validate_modules(
         repository = _module_repository_full_name(payload)
         if repository:
             module_repositories[slug] = repository
+        source_path = str(payload.get("source_path", "")).strip()
+        if repository and source_path:
+            module_source_paths[slug] = source_path
+        if image:
+            tag = _image_tag(image)
+            if tag in UNPINNED_IMAGE_TAGS:
+                production_ready = not _is_false(payload.get("production_ready", True))
+                message = (
+                    f"{path}: image '{image}' uses unpinned tag '{tag}'. "
+                    "Set production_ready=false for local placeholders or pin a "
+                    "release/digest before production."
+                )
+                if strict_images and production_ready:
+                    errors.append(message)
+                else:
+                    warnings.append(message)
         if _validate_module_public_route(payload, path, errors):
             public_modules[slug] = payload
 
     if not module_slugs:
         errors.append("manifests/modules: no module manifest found")
-    return module_slugs, public_modules, module_repositories
+    return module_slugs, public_modules, module_repositories, module_source_paths
 
 
 def _validate_module_refs(
@@ -160,6 +229,7 @@ def _validate_repository_manifests(
     module_slugs: set[str],
     public_modules: dict[str, dict[str, Any]],
     module_repositories: dict[str, str],
+    module_source_paths: dict[str, str],
     errors: list[str],
 ) -> list[dict[str, Any]]:
     repository_manifests: list[dict[str, Any]] = []
@@ -193,6 +263,16 @@ def _validate_repository_manifests(
                         f"{path}: path mapping '{prefix}' references "
                         f"unknown module '{module_slug}'",
                     )
+
+        valid_mappings = [mapping for mapping in mappings if isinstance(mapping, dict)]
+        for module_slug, source_path in sorted(module_source_paths.items()):
+            if module_repositories.get(module_slug) != repository:
+                continue
+            if not _is_source_path_covered(source_path, module_slug, valid_mappings):
+                errors.append(
+                    f"{path}: module '{module_slug}' source_path '{source_path}' "
+                    "is not covered by repository path_mappings",
+                )
 
         route_default_slugs: set[str] = set()
         route_defaults = payload.get("route_defaults", [])
@@ -303,6 +383,8 @@ def _validate_renovate(errors: list[str]) -> None:
     enabled_managers = payload.get("enabledManagers", [])
     if "custom.regex" not in enabled_managers:
         errors.append(f"{RENOVATE_FILE}: custom.regex manager must stay enabled")
+    if payload.get("dependencyDashboard") is not True:
+        errors.append(f"{RENOVATE_FILE}: dependencyDashboard must be enabled")
 
     managers = payload.get("customManagers", [])
     if not isinstance(managers, list) or not managers:
@@ -323,6 +405,30 @@ def _validate_renovate(errors: list[str]) -> None:
             f"{RENOVATE_FILE}: missing custom manager for manifests/modules images",
         )
 
+    package_rules = payload.get("packageRules", [])
+    if not isinstance(package_rules, list):
+        errors.append(f"{RENOVATE_FILE}: packageRules must be a list")
+        package_rules = []
+    has_smartappli_rule = any(
+        isinstance(rule, dict)
+        and "smartappli-ghcr" in rule.get("labels", [])
+        and any(
+            str(package).startswith("ghcr.io/smartappli/")
+            for package in rule.get("matchPackageNames", [])
+        )
+        for rule in package_rules
+    )
+    if not has_smartappli_rule:
+        errors.append(f"{RENOVATE_FILE}: missing Smartappli GHCR package rule")
+
+    has_public_image_rule = any(
+        isinstance(rule, dict)
+        and "public-image" in rule.get("labels", [])
+        for rule in package_rules
+    )
+    if not has_public_image_rule:
+        errors.append(f"{RENOVATE_FILE}: missing public image package rule")
+
     image_pattern = re.compile(
         r'"image"\s*:\s*"(?P<dep_name>[^":]+(?:/[^":]+)+):(?P<current_value>[^"@]+)"',
     )
@@ -339,12 +445,19 @@ def _validate_renovate(errors: list[str]) -> None:
 
 def main() -> int:
     errors: list[str] = []
-    module_slugs, public_modules, module_repositories = _validate_modules(errors)
+    warnings: list[str] = []
+    (
+        module_slugs,
+        public_modules,
+        module_repositories,
+        module_source_paths,
+    ) = _validate_modules(errors, warnings)
     _validate_tools_and_applications(module_slugs, errors)
     repository_manifests = _validate_repository_manifests(
         module_slugs,
         public_modules,
         module_repositories,
+        module_source_paths,
         errors,
     )
     _validate_apisix_routes(public_modules, repository_manifests, errors)
@@ -355,7 +468,13 @@ def main() -> int:
             print(f"ERROR: {error}", file=sys.stderr)
         return 1
 
-    print("Hosting manifests validation passed")
+    for warning in warnings:
+        print(f"WARNING: {warning}", file=sys.stderr)
+    print(
+        "Hosting manifests validation passed "
+        f"({len(module_slugs)} modules, {len(repository_manifests)} repositories, "
+        f"{len(public_modules)} public modules)",
+    )
     return 0
 
 

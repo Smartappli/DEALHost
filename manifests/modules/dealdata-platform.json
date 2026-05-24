@@ -7,5 +7,6 @@
   "repository_name": "DEALData",
   "source_path": ".",
   "deployment_target": "compose",
+  "production_ready": false,
   "enabled": true
 }

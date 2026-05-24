@@ -10,5 +10,6 @@
   "public_path": "/dealiot/prometheus",
   "upstream_host": "prometheus",
   "upstream_port": 9090,
+  "production_ready": false,
   "enabled": true
 }

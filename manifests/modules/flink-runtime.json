@@ -17,5 +17,6 @@
     "state.latest",
     "dlq.events"
   ],
+  "production_ready": false,
   "enabled": true
 }

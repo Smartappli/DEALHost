@@ -7,5 +7,6 @@
   "repository_name": "DEALIoT",
   "source_path": "deploy",
   "deployment_target": "kubernetes",
+  "production_ready": false,
   "enabled": true
 }

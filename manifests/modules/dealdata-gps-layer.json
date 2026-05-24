@@ -15,5 +15,6 @@
     "gps_raw_data",
     "processed_gps_data"
   ],
+  "production_ready": false,
   "enabled": true
 }
