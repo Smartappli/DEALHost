@@ -9,6 +9,43 @@ from apps.hosting.models import HostedApplication, Module, Tool
 
 
 class HostingDiscoveryTests(TestCase):
+    def test_autodiscover_creates_modules_from_manifests(self):
+        with TemporaryDirectory() as tmpdir:
+            base = Path(tmpdir)
+            (base / "modules").mkdir(parents=True)
+            (base / "modules" / "flink-runtime.json").write_text(
+                json.dumps(
+                    {
+                        "name": "DEALIoT Flink Runtime",
+                        "slug": "flink-runtime",
+                        "image": "ghcr.io/smartappli/dealiot-flink-pyflink:sha-test",
+                        "repository_owner": "Smartappli",
+                        "repository_name": "DEALIoT",
+                        "source_path": "pipelines",
+                        "deployment_target": "kubernetes",
+                        "public_path": "/dealiot/flink",
+                        "upstream_host": "flink-jobmanager",
+                        "upstream_port": 8081,
+                        "contract_topics": ["raw.sensor", "state.latest"],
+                    },
+                ),
+                encoding="utf-8",
+            )
+
+            report = auto_discover_tools_and_applications(manifests_dir=base)
+
+        self.assertEqual(report.modules_created, 1)
+        self.assertEqual(report.errors, [])
+        module = Module.objects.get(slug="flink-runtime")
+        self.assertEqual(module.repository_owner, "Smartappli")
+        self.assertEqual(module.repository_name, "DEALIoT")
+        self.assertEqual(module.source_path, "pipelines")
+        self.assertEqual(module.deployment_target, "kubernetes")
+        self.assertEqual(module.public_path, "/dealiot/flink")
+        self.assertEqual(module.upstream_host, "flink-jobmanager")
+        self.assertEqual(module.upstream_port, 8081)
+        self.assertEqual(module.contract_topics, ["raw.sensor", "state.latest"])
+
     def test_autodiscover_creates_tools_and_applications_from_manifests(self):
         module = Module.objects.create(
             name="Core",

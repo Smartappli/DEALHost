@@ -42,8 +42,8 @@ def get_env(name: str, default: str | None = None) -> str:
 
 def github_config() -> GitHubConfig:
     return GitHubConfig(
-        owner=get_env("GITHUB_OWNER", "dealiot"),
-        repository=get_env("GITHUB_REPOSITORY", "smartappli"),
+        owner=get_env("GITHUB_OWNER", "Smartappli"),
+        repository=get_env("GITHUB_REPOSITORY", "DEALIoT"),
         token=get_env("GITHUB_TOKEN", "replace-me"),
         webhook_secret=get_env("GITHUB_WEBHOOK_SECRET", "replace-me"),
     )

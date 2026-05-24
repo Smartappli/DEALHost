@@ -413,6 +413,8 @@ class HostingEventPublishingTests(SimpleTestCase):
         redirect_mock,
     ):
         report = SimpleNamespace(
+            modules_created=0,
+            modules_updated=0,
             tools_created=1,
             tools_updated=2,
             applications_created=3,

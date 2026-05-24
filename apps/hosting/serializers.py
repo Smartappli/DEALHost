@@ -11,7 +11,18 @@ SEMVER_PATTERN = r"^v?\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$"
 class ModuleSummarySerializer(serializers.ModelSerializer):
     class Meta:
         model = Module
-        fields = ["id", "name", "slug", "image", "branch", "enabled"]
+        fields = [
+            "id",
+            "name",
+            "slug",
+            "image",
+            "branch",
+            "deployment_target",
+            "public_path",
+            "upstream_host",
+            "upstream_port",
+            "enabled",
+        ]
         read_only_fields = fields
 
 
@@ -24,6 +35,15 @@ class ModuleSerializer(serializers.ModelSerializer):
             "slug",
             "image",
             "branch",
+            "repository_owner",
+            "repository_name",
+            "source_path",
+            "deployment_target",
+            "public_path",
+            "upstream_host",
+            "upstream_port",
+            "healthcheck_path",
+            "contract_topics",
             "enabled",
             "created_at",
         ]

@@ -6,10 +6,29 @@ from django.utils.translation import gettext_lazy as _
 class Module(models.Model):
     """Un module déployable indépendamment (billing, auth, cms...)."""
 
+    class DeploymentTarget(models.TextChoices):
+        COMPOSE = "compose", _("Docker Compose")
+        SWARM = "swarm", _("Docker Swarm")
+        KUBERNETES = "kubernetes", _("Kubernetes")
+        EXTERNAL = "external", _("External service")
+
     name = models.CharField(max_length=80, unique=True)
     slug = models.SlugField(max_length=80, unique=True)
     image = models.CharField(max_length=255)
     branch = models.CharField(max_length=120, default="main")
+    repository_owner = models.CharField(max_length=120, blank=True, default="")
+    repository_name = models.CharField(max_length=120, blank=True, default="")
+    source_path = models.CharField(max_length=255, blank=True, default="")
+    deployment_target = models.CharField(
+        max_length=32,
+        choices=DeploymentTarget.choices,
+        default=DeploymentTarget.COMPOSE,
+    )
+    public_path = models.CharField(max_length=120, blank=True, default="")
+    upstream_host = models.CharField(max_length=255, blank=True, default="")
+    upstream_port = models.PositiveIntegerField(null=True, blank=True)
+    healthcheck_path = models.CharField(max_length=255, blank=True, default="")
+    contract_topics = models.JSONField(default=list, blank=True)
     enabled = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

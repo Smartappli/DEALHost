@@ -32,7 +32,7 @@ class GatewayEventPublishingTests(SimpleTestCase):
     @patch("apps.gateway.views.publish_event")
     @patch("apps.gateway.views.ApisixService")
     @patch("apps.gateway.views.GitHubService")
-    def test_webhook_emits_received_requested_completed(
+    def test_dealiot_webhook_maps_changed_paths_and_emits_events(
         self,
         github_service_cls,
         apisix_service_cls,
@@ -40,12 +40,25 @@ class GatewayEventPublishingTests(SimpleTestCase):
     ):
         github = MagicMock()
         github.verify_signature.return_value = True
+        github.repository_full_name.return_value = "Smartappli/DEALIoT"
+        github.expected_repository_full_name.return_value = "Smartappli/DEALIoT"
+        github.is_expected_repository.return_value = True
+        github.module_slugs_for_webhook.return_value = ["mqtt-kafka-bridge"]
         github_service_cls.return_value = github
         apisix_service_cls.return_value.publish_route.return_value = {"route_id": "r-2"}
 
         request = self.factory.post(
             "/api/gateway/github/webhook/",
-            {"module_slug": "core"},
+            {
+                "repository": {"full_name": "Smartappli/DEALIoT"},
+                "commits": [
+                    {
+                        "modified": ["mqtt-kafka-bridge/bridge.py"],
+                        "added": [],
+                        "removed": [],
+                    },
+                ],
+            },
             format="json",
             HTTP_X_HUB_SIGNATURE_256="sha256=ok",
             HTTP_X_GITHUB_EVENT="push",
@@ -55,3 +68,38 @@ class GatewayEventPublishingTests(SimpleTestCase):
 
         self.assertEqual(response.status_code, 202)
         self.assertEqual(publish_mock.call_count, 3)
+        apisix_service_cls.return_value.publish_route.assert_called_once_with(
+            "mqtt-kafka-bridge",
+        )
+        self.assertEqual(response.data["module_slugs"], ["mqtt-kafka-bridge"])
+
+    @patch("apps.gateway.views.publish_event")
+    @patch("apps.gateway.views.ApisixService")
+    @patch("apps.gateway.views.GitHubService")
+    def test_webhook_ignores_unexpected_repository(
+        self,
+        github_service_cls,
+        apisix_service_cls,
+        publish_mock,
+    ):
+        github = MagicMock()
+        github.verify_signature.return_value = True
+        github.repository_full_name.return_value = "Other/Repo"
+        github.expected_repository_full_name.return_value = "Smartappli/DEALIoT"
+        github.is_expected_repository.return_value = False
+        github_service_cls.return_value = github
+
+        request = self.factory.post(
+            "/api/gateway/github/webhook/",
+            {"repository": {"full_name": "Other/Repo"}},
+            format="json",
+            HTTP_X_HUB_SIGNATURE_256="sha256=ok",
+            HTTP_X_GITHUB_EVENT="push",
+        )
+
+        response = GitHubWebhookView.as_view()(request)
+
+        self.assertEqual(response.status_code, 202)
+        self.assertTrue(response.data["ignored"])
+        publish_mock.assert_not_called()
+        apisix_service_cls.return_value.publish_route.assert_not_called()

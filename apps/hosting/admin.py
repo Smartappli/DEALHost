@@ -12,9 +12,18 @@ from .models import (
 
 @admin.register(Module)
 class ModuleAdmin(admin.ModelAdmin):
-    list_display = ("name", "slug", "branch", "enabled", "created_at")
-    list_filter = ("enabled", "branch")
-    search_fields = ("name", "slug", "image")
+    list_display = (
+        "name",
+        "slug",
+        "deployment_target",
+        "public_path",
+        "upstream_host",
+        "upstream_port",
+        "enabled",
+        "created_at",
+    )
+    list_filter = ("enabled", "branch", "deployment_target", "repository_owner")
+    search_fields = ("name", "slug", "image", "source_path", "repository_name")
 
 
 class ToolVersionInline(admin.TabularInline):

@@ -47,13 +47,13 @@
     <h2>{% trans "Modules" %}</h2>
     <table>
       <thead>
-        <tr><th>{% trans "Name" %}</th><th>{% trans "Slug" %}</th><th>{% trans "Branch" %}</th><th>{% trans "Enabled" %}</th></tr>
+        <tr><th>{% trans "Name" %}</th><th>{% trans "Slug" %}</th><th>{% trans "Branch" %}</th><th>{% trans "Target" %}</th><th>{% trans "Route" %}</th><th>{% trans "Enabled" %}</th></tr>
       </thead>
       <tbody>
         {% for module in modules %}
-          <tr><td>{{ module.name }}</td><td>{{ module.slug }}</td><td>{{ module.branch }}</td><td>{% if module.enabled %}{% trans "Yes" %}{% else %}{% trans "No" %}{% endif %}</td></tr>
+          <tr><td>{{ module.name }}</td><td>{{ module.slug }}</td><td>{{ module.branch }}</td><td>{{ module.deployment_target }}</td><td>{{ module.public_path|default:"-" }}</td><td>{% if module.enabled %}{% trans "Yes" %}{% else %}{% trans "No" %}{% endif %}</td></tr>
         {% empty %}
-          <tr><td colspan="4">{% trans "No modules" %}</td></tr>
+          <tr><td colspan="6">{% trans "No modules" %}</td></tr>
         {% endfor %}
       </tbody>
     </table>

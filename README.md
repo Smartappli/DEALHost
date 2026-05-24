@@ -1,6 +1,6 @@
 # DEALHost — Architecture d’hébergement modulaire (Django 6 + APISIX + GitHub)
 
-Ce dépôt contient un socle **Django 6 ASGI** (servi par **Granian**) pour exposer une plateforme d’hébergement modulaire reliée au dépôt GitHub **`dealiot/smartappli`** et pilotée via **Apache APISIX**.
+Ce dépôt contient un socle **Django 6 ASGI** (servi par **Granian**) pour exposer une plateforme d’hébergement modulaire reliée au dépôt GitHub **`Smartappli/DEALIoT`** et pilotée via **Apache APISIX**.
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Smartappli_DEALHost&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Smartappli_DEALHost)
 [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=Smartappli_DEALHost&metric=bugs)](https://sonarcloud.io/summary/new_code?id=Smartappli_DEALHost)
@@ -25,7 +25,7 @@ Ce dépôt contient un socle **Django 6 ASGI** (servi par **Granian**) pour expo
 ## Architecture proposée
 
 ```text
-GitHub (dealiot/smartappli)
+GitHub (Smartappli/DEALIoT)
         │
         │ webhook / API
         ▼
@@ -208,7 +208,8 @@ System.out.println(response);
 - Les manifests de découverte sont lus depuis:
   - `manifests/tools/*.json`
   - `manifests/applications/*.json`
-- Champs attendus: `name`, `slug`, `description` (optionnel), `enabled` (optionnel), `module_slugs` (optionnel), `version` (optionnel, semver), `version_notes` (optionnel).
+- Champs attendus pour les modules: `name`, `slug`, `image`, `branch` (optionnel), `repository_owner` (optionnel), `repository_name` (optionnel), `source_path` (optionnel), `deployment_target` (optionnel), `public_path` (optionnel), `upstream_host` (optionnel), `upstream_port` (optionnel), `healthcheck_path` (optionnel), `contract_topics` (optionnel), `enabled` (optionnel).
+- Champs attendus pour les tools/applications: `name`, `slug`, `description` (optionnel), `enabled` (optionnel), `module_slugs` (optionnel), `version` (optionnel, semver), `version_notes` (optionnel).
 - L’auto découverte crée/met à jour automatiquement les objets `Tool` et `HostedApplication`, synchronise leurs liens modules, et enregistre l'historique des versions quand `version` est fourni.
 
 ### Internationalisation de l’interface
@@ -299,12 +300,12 @@ System.out.println(response);
 
 - `CI Django DEALHost` (`.github/workflows/ci.yml`) : exécute une matrice multi-plateforme (Linux/macOS/Windows) et multi-versions Python (3.12 à 3.14). Le projet cible Python >=3.12 : les jobs 3.12/3.13/3.14 installent d'abord `requirements.txt` puis le package (`uv pip install --system -r requirements.txt` puis `uv pip install --system -e .`), vérifient les migrations, exécutent les tests unitaires sous couverture (`uv run coverage run --source=apps,dealhost,sdk manage.py test tests --verbosity 2`), exportent `coverage.xml` et lancent le contrôle de compilation.
 - `SonarCloud` (`.github/workflows/sonarcloud.yml`) : exécute les tests avec couverture sur Ubuntu + Python 3.12 puis lance l'analyse SonarCloud (`SonarSource/sonarqube-scan-action@v6`) à partir du fichier `sonar-project.properties`.
-- `Validate APISIX Routes` (`.github/workflows/apisix-routes-validate.yml`) : valide la syntaxe JSON des routes APISIX et vérifie la présence d'une route coeur `module-core`.
+- `Validate APISIX Routes` (`.github/workflows/apisix-routes-validate.yml`) : valide la syntaxe JSON des routes APISIX et vérifie la présence des routes coeur et DEALIoT attendues.
 - `Pre-commit` (`.github/workflows/pre-commit.yml`) : installe `pre-commit` via `uv` puis exécute `uv run pre-commit run --all-files --show-diff-on-failure` (incluant Ruff en mode `--select ALL` et `ruff-format`).
 
 ## Dependency Automation
 
-- `Dependabot` est configuré via `.github/dependabot.yml` pour surveiller chaque semaine les dépendances Python et GitHub Actions.
+- `Dependabot` est configuré via `.github/dependabot.yml` pour surveiller chaque semaine les dépendances Python, Rust, Go, Docker Compose et GitHub Actions.
 - `Renovate` est configuré via `renovate.json` avec preset recommandé, regroupement des updates mineures/patch, et label spécifique pour les majors.
 
 

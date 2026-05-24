@@ -19,7 +19,7 @@ jobs:
       - name: Validate JSON syntax
         run: python -m json.tool infra/apisix/routes.json > /dev/null
 
-      - name: Ensure core route exists
+      - name: Ensure expected routes exist
         run: |
           python - <<'PY'
           import json
@@ -27,7 +27,15 @@ jobs:
 
           payload = json.loads(Path('infra/apisix/routes.json').read_text())
           routes = payload.get('routes', [])
+          route_ids = {route.get('id') for route in routes}
+          required = {
+              'module-core',
+              'module-schema-registry-contracts',
+              'module-flink-runtime',
+              'module-airflow-orchestration',
+          }
           assert routes, 'No APISIX route found in infra/apisix/routes.json'
-          assert any(route.get('id') == 'module-core' for route in routes), 'Missing module-core route'
+          missing = sorted(required - route_ids)
+          assert not missing, f'Missing APISIX route(s): {missing}'
           print('APISIX routes validation passed')
           PY
