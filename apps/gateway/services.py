@@ -95,9 +95,14 @@ class GitHubService:
         branch: str = "main",
         repository_full_name: str | None = None,
     ) -> dict:
-        repository = repository_full_name or self.expected_repository_full_name()
+        repository = (
+            repository_full_name or self.expected_repository_full_name()
+        ).strip()
         if not self.is_allowed_repository_full_name(repository):
             msg = f"Repository is not allowed: {repository}"
+            raise ValueError(msg)
+        if "/" not in repository:
+            msg = f"Repository must use owner/name format: {repository}"
             raise ValueError(msg)
 
         owner, repository_name = repository.split("/", maxsplit=1)
@@ -127,6 +132,7 @@ class GitHubService:
         )
 
     def is_allowed_repository_full_name(self, repository: str) -> bool:
+        repository = repository.strip()
         allowed = self.allowed_repository_full_names()
         return bool(repository) and any(
             repository.casefold() == candidate.casefold()
@@ -134,7 +140,7 @@ class GitHubService:
         )
 
     def repository_manifest(self, repository: str) -> dict[str, Any] | None:
-        return self.repository_manifest_map.get(repository.casefold())
+        return self.repository_manifest_map.get(repository.strip().casefold())
 
     def allowed_events_for_repository(self, repository: str) -> tuple[str, ...]:
         manifest = self.repository_manifest(repository)
@@ -187,6 +193,8 @@ class GitHubService:
         repository_manifest = self.repository_manifest(repository)
         if repository_manifest:
             manifests = [repository_manifest]
+        elif repository:
+            return None
         else:
             manifests = self.repository_manifests
 

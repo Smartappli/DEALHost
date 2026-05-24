@@ -30,9 +30,12 @@ class HealthView(APIView):
 class SyncGitHubView(APIView):
     def post(self, request):
         branch = request.data.get("branch", "main")
-        repository = request.data.get("repository_full_name") or request.data.get(
-            "repository",
-        )
+        repository = request.data.get("repository_full_name")
+        repository_payload = request.data.get("repository")
+        if not repository and isinstance(repository_payload, dict):
+            repository = repository_payload.get("full_name")
+        elif not repository:
+            repository = repository_payload
         github = GitHubService()
         if repository and not github.is_allowed_repository_full_name(str(repository)):
             return Response(
@@ -62,11 +65,12 @@ class PublishRouteView(APIView):
     def post(self, request):
         module_slug = request.data.get("module_slug")
         dry_run = _is_truthy(request.data.get("dry_run", False))
-        if not module_slug:
+        if not module_slug or not str(module_slug).strip():
             return Response(
                 {"detail": _("module_slug is required.")},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        module_slug = str(module_slug).strip()
 
         publish_event(
             event_type=GATEWAY_ROUTE_PUBLISH_REQUESTED,

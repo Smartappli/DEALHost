@@ -277,7 +277,9 @@ def _validate_apisix_routes(
             if not isinstance(route_default, dict):
                 continue
             module_slug = route_default.get("module_slug")
-            route_id = _route_id_for_module(str(module_slug))
+            if not isinstance(module_slug, str) or not module_slug:
+                continue
+            route_id = _route_id_for_module(module_slug)
             route = routes_by_id.get(route_id)
             if route is None:
                 errors.append(

@@ -59,7 +59,7 @@ Upstream modules (containers/services Django)
 - `GET/POST /api/hosting/modules/` : CRUD des modules hébergés.
 - `GET/POST /api/hosting/tools/` : CRUD des outils (chaque outil peut lier plusieurs modules).
 - `GET/POST /api/hosting/applications/` : CRUD des applications hébergées (chaque application peut lier plusieurs modules).
-- `POST /api/hosting/autodiscover/` : auto découverte depuis les manifests tools/apps.
+- `POST /api/hosting/autodiscover/` : auto découverte depuis les manifests modules/tools/apps.
 - `GET /hosting/manage/` : interface de gestion (modules, tools, datasets accessibles à l'utilisateur connecté, applications + auto découverte).
 - `POST /i18n/setlang/` : changement de langue de l’interface de gestion.
 - `GET/POST /api/iam/users/` : gestion des utilisateurs (avec groupes/permissions + endpoint `set-password`).
@@ -203,9 +203,9 @@ String response = client.createTool("Backoffice", "backoffice", "Outil d'adminis
 System.out.println(response);
 ```
 
-### Auto découverte des tools et applications
+### Manifests d’intégration hosting/gateway
 
-- Les manifests de découverte sont lus depuis:
+- Les manifests d’intégration sont lus depuis:
   - `manifests/modules/*.json`
   - `manifests/tools/*.json`
   - `manifests/applications/*.json`
@@ -213,7 +213,8 @@ System.out.println(response);
 - Champs attendus pour les modules: `name`, `slug`, `image`, `branch` (optionnel), `repository_owner` (optionnel), `repository_name` (optionnel), `source_path` (optionnel), `deployment_target` (optionnel), `public_path` (optionnel), `upstream_host` (optionnel), `upstream_port` (optionnel), `healthcheck_path` (optionnel), `contract_topics` (optionnel), `enabled` (optionnel).
 - Champs attendus pour les tools/applications: `name`, `slug`, `description` (optionnel), `enabled` (optionnel), `module_slugs` (optionnel), `version` (optionnel, semver), `version_notes` (optionnel).
 - Champs attendus pour les repositories: `repository_full_name`, `allowed_events`, `path_mappings` (`prefix`, `module_slug`) et `route_defaults` (`module_slug`, `public_path`, `upstream_host`, `upstream_port`).
-- L’auto découverte crée/met à jour automatiquement les objets `Tool` et `HostedApplication`, synchronise leurs liens modules, et enregistre l'historique des versions quand `version` est fourni.
+- L’auto découverte crée/met à jour automatiquement les objets `Module`, `Tool` et `HostedApplication`, synchronise leurs liens modules, et enregistre l'historique des versions quand `version` est fourni.
+- Les manifests repositories pilotent le mapping webhook GitHub -> modules et les routes APISIX par défaut; ils ne créent pas d'objets en base.
 
 ### Internationalisation de l’interface
 

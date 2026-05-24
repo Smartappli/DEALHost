@@ -83,6 +83,7 @@ class GitHubServiceTests(SimpleTestCase):
                     "modified": [
                         "mqtt-kafka-bridge/bridge.py",
                         "apicurio/bootstrap/raw.sensor.json",
+                        "orchestration/Dockerfile",
                     ],
                     "added": ["deploy/kubernetes/base/kustomization.yaml"],
                     "removed": [],
@@ -96,6 +97,7 @@ class GitHubServiceTests(SimpleTestCase):
                 "dealiot-platform",
                 "schema-registry-contracts",
                 "mqtt-kafka-bridge",
+                "airflow-orchestration",
             },
         )
 
@@ -217,6 +219,13 @@ class ApisixServiceTests(TestCase):
         self.assertEqual(result["route_id"], "module-dealdata-core-layer")
         self.assertTrue(result["dry_run"])
         self.assertEqual(result["payload"]["uri"], "/dealdata/core/*")
+        put_mock.assert_not_called()
+
+    @patch("apps.gateway.services.httpx.put")
+    def test_publish_route_keeps_prefixed_module_route_id(self, put_mock):
+        result = ApisixService().publish_route("module-core", dry_run=True)
+
+        self.assertEqual(result["route_id"], "module-core")
         put_mock.assert_not_called()
 
     @patch("apps.gateway.services.httpx.put")

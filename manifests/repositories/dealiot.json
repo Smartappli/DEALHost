@@ -19,6 +19,10 @@
       "module_slug": "airflow-orchestration"
     },
     {
+      "prefix": "orchestration/",
+      "module_slug": "airflow-orchestration"
+    },
+    {
       "prefix": "pipelines/",
       "module_slug": "flink-runtime"
     },
@@ -52,6 +56,38 @@
     },
     {
       "prefix": "scripts/",
+      "module_slug": "dealiot-platform"
+    },
+    {
+      "prefix": "caddy/",
+      "module_slug": "dealiot-platform"
+    },
+    {
+      "prefix": "haproxy/",
+      "module_slug": "dealiot-platform"
+    },
+    {
+      "prefix": "kafka-connect/",
+      "module_slug": "dealiot-platform"
+    },
+    {
+      "prefix": "patroni/",
+      "module_slug": "dealiot-platform"
+    },
+    {
+      "prefix": "pgadmin/",
+      "module_slug": "dealiot-platform"
+    },
+    {
+      "prefix": "pgbouncer/",
+      "module_slug": "dealiot-platform"
+    },
+    {
+      "prefix": "seaweedfs/",
+      "module_slug": "dealiot-platform"
+    },
+    {
+      "prefix": "secrets/",
       "module_slug": "dealiot-platform"
     },
     {
