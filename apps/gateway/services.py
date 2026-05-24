@@ -27,6 +27,29 @@ DEALIOT_PATH_MODULES = (
     ("docker-compose", "dealiot-platform"),
     (".env.example", "dealiot-platform"),
 )
+DEALIOT_ROUTE_DEFAULTS = {
+    "schema-registry-contracts": {
+        "public_path": "/dealiot/apicurio",
+        "upstream_host": "apicurio-registry",
+        "upstream_port": 8080,
+    },
+    "flink-runtime": {
+        "public_path": "/dealiot/flink",
+        "upstream_host": "flink-jobmanager",
+        "upstream_port": 8081,
+    },
+    "airflow-orchestration": {
+        "public_path": "/dealiot/airflow",
+        "upstream_host": "airflow-apiserver",
+        "upstream_port": 8080,
+    },
+    "observability": {
+        "public_path": "/dealiot/prometheus",
+        "upstream_host": "prometheus",
+        "upstream_port": 9090,
+    },
+}
+DEALIOT_MODULE_SLUGS = {slug for _, slug in DEALIOT_PATH_MODULES}
 
 
 def _deduplicate(values: list[str]) -> list[str]:
@@ -134,6 +157,11 @@ class ApisixService:
         public_path = f"/{module_slug}"
         upstream_host = self.config.upstream_host
         upstream_port = self.config.upstream_port
+        default_route = DEALIOT_ROUTE_DEFAULTS.get(module_slug)
+        if default_route:
+            public_path = str(default_route["public_path"])
+            upstream_host = str(default_route["upstream_host"])
+            upstream_port = int(default_route["upstream_port"])
 
         try:
             from apps.hosting.models import Module
@@ -155,6 +183,14 @@ class ApisixService:
                 public_path = module.public_path or public_path
                 upstream_host = module.upstream_host or upstream_host
                 upstream_port = module.upstream_port or upstream_port
+            elif module_slug in DEALIOT_MODULE_SLUGS and default_route is None:
+                return {
+                    "route_id": route_id,
+                    "skipped": True,
+                    "reason": "DEALIoT module has no public upstream",
+                    "payload": None,
+                    "response": None,
+                }
         except Exception:
             pass
 

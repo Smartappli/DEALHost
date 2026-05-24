@@ -105,6 +105,22 @@ class ApisixServiceTests(TestCase):
         response.raise_for_status.assert_called_once()
 
     @patch("apps.gateway.services.httpx.put")
+    def test_publish_route_uses_dealiot_default_route_when_module_missing(self, put_mock):
+        response = Mock()
+        response.json.return_value = {"ok": True}
+        put_mock.return_value = response
+
+        result = ApisixService().publish_route("schema-registry-contracts")
+
+        self.assertEqual(result["route_id"], "module-schema-registry-contracts")
+        payload = put_mock.call_args.kwargs["json"]
+        self.assertEqual(payload["uri"], "/dealiot/apicurio/*")
+        self.assertEqual(
+            payload["upstream"]["nodes"],
+            {"apicurio-registry:8080": 1},
+        )
+
+    @patch("apps.gateway.services.httpx.put")
     def test_publish_route_skips_known_module_without_public_upstream(self, put_mock):
         Module.objects.create(
             name="Bridge",
@@ -112,6 +128,13 @@ class ApisixServiceTests(TestCase):
             image="ghcr.io/smartappli/dealiot-mqtt-kafka-bridge:sha-test",
         )
 
+        result = ApisixService().publish_route("mqtt-kafka-bridge")
+
+        self.assertTrue(result["skipped"])
+        put_mock.assert_not_called()
+
+    @patch("apps.gateway.services.httpx.put")
+    def test_publish_route_skips_internal_dealiot_module_when_missing(self, put_mock):
         result = ApisixService().publish_route("mqtt-kafka-bridge")
 
         self.assertTrue(result["skipped"])
