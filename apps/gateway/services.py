@@ -69,6 +69,12 @@ def _known_module_slugs_from_manifests(manifests: list[dict[str, Any]]) -> set[s
     return slugs
 
 
+def _route_id_for_module(module_slug: str) -> str:
+    if module_slug.startswith("module-"):
+        return module_slug
+    return f"module-{module_slug}"
+
+
 class GitHubService:
     def __init__(self) -> None:
         self.config = settings.GITHUB
@@ -252,7 +258,7 @@ class ApisixService:
         }
 
     def publish_route(self, module_slug: str, dry_run: bool = False) -> dict:
-        route_id = f"module-{module_slug}"
+        route_id = _route_id_for_module(module_slug)
         public_path = f"/{module_slug}"
         upstream_host = self.config.upstream_host
         upstream_port = self.config.upstream_port

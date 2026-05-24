@@ -88,6 +88,12 @@ def _module_repository_full_name(payload: dict[str, Any]) -> str:
     return ""
 
 
+def _route_id_for_module(module_slug: str) -> str:
+    if module_slug.startswith("module-"):
+        return module_slug
+    return f"module-{module_slug}"
+
+
 def _validate_modules(
     errors: list[str],
 ) -> tuple[set[str], dict[str, dict[str, Any]], dict[str, str]]:
@@ -252,7 +258,7 @@ def _validate_apisix_routes(
         routes_by_id[route_id] = route
 
     for module_slug, module in sorted(public_modules.items()):
-        route_id = f"module-{module_slug}"
+        route_id = _route_id_for_module(module_slug)
         route = routes_by_id.get(route_id)
         if route is None:
             errors.append(
@@ -271,7 +277,7 @@ def _validate_apisix_routes(
             if not isinstance(route_default, dict):
                 continue
             module_slug = route_default.get("module_slug")
-            route_id = f"module-{module_slug}"
+            route_id = _route_id_for_module(str(module_slug))
             route = routes_by_id.get(route_id)
             if route is None:
                 errors.append(
