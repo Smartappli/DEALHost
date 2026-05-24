@@ -3,35 +3,80 @@ updates:
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
-      interval: "daily"
-    labels:
-      - "🤖 Dependencies"
-      - "🤖 Dependabot"
-      - "python"
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "dependabot", "python"]
+    groups:
+      python-runtime:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
 
-  - package-ecosystem: "docker"
-    directory: "/"
+  - package-ecosystem: "pip"
+    directory: "/sdk/python"
     schedule:
-      interval: "daily"
-    labels:
-      - "🤖 Dependencies"
-      - "🤖 Dependabot"
-      - "docker"
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "dependabot", "python"]
+    groups:
+      python-sdk:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: "cargo"
+    directory: "/sdk/rust/dealhost-sdk"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "dependabot", "rust"]
+    groups:
+      rust-sdk:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: "gomod"
+    directory: "/sdk/go/dealhost-sdk"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "dependabot", "go"]
+    groups:
+      go-sdk:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
 
   - package-ecosystem: "docker-compose"
     directory: "/"
     schedule:
-      interval: "daily"
-    labels:
-      - "🤖 Dependencies"
-      - "🤖 Dependabot"
-      - "docker-compose"
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "dependabot", "docker-compose"]
+    groups:
+      compose-images:
+        patterns:
+          - "*"
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "daily"
-    labels:
-      - "🤖 Dependencies"
-      - "🤖 Dependabot"
-      - "github-actions"
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "dependabot", "github-actions"]
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
