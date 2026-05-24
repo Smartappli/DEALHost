@@ -125,7 +125,7 @@ def auto_discover_tools_and_applications(
                     "deployment_target": str(
                         payload.get(
                             "deployment_target",
-                            Module.DeploymentTarget.COMPOSE,
+                            Module.DeploymentTarget.COMPOSE.value,
                         ),
                     ),
                     "public_path": str(payload.get("public_path", "")),
