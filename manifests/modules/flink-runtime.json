@@ -13,6 +13,7 @@
   "contract_topics": [
     "raw.sensor",
     "raw.gps",
+    "features.events",
     "state.latest",
     "dlq.events"
   ],
