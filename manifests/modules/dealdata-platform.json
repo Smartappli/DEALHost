@@ -1,0 +1,11 @@
+{
+  "name": "DEALData Platform",
+  "slug": "dealdata-platform",
+  "image": "ghcr.io/smartappli/dealdata-core-layer:local-placeholder",
+  "branch": "main",
+  "repository_owner": "Smartappli",
+  "repository_name": "DEALData",
+  "source_path": ".",
+  "deployment_target": "compose",
+  "enabled": true
+}
