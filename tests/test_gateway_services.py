@@ -62,6 +62,26 @@ class GitHubServiceTests(SimpleTestCase):
         )
         response.raise_for_status.assert_called_once()
 
+    @patch("apps.gateway.services.httpx.get")
+    def test_latest_commit_url_encodes_branch_refs(self, get_mock):
+        response = Mock()
+        response.json.return_value = {
+            "sha": "sha-test",
+            "repository": {"full_name": "Smartappli/DEALIoT"},
+            "commit": {"message": "test commit"},
+        }
+        get_mock.return_value = response
+
+        GitHubService().latest_commit(
+            branch="release/1.0",
+            repository_full_name="Smartappli/DEALIoT",
+        )
+
+        self.assertIn(
+            "/repos/Smartappli/DEALIoT/commits/release%2F1.0",
+            get_mock.call_args.args[0],
+        )
+
     def test_latest_commit_rejects_disallowed_repository(self):
         with self.assertRaises(ValueError):
             GitHubService().latest_commit(
@@ -73,6 +93,23 @@ class GitHubServiceTests(SimpleTestCase):
         self.assertEqual(
             GitHubService().allowed_events_for_repository("Smartappli/DEALIoT"),
             ("push",),
+        )
+
+    def test_repository_integrations_summarize_manifest_links(self):
+        integrations = GitHubService().repository_integrations()
+        by_repository = {
+            integration["repository_full_name"]: integration
+            for integration in integrations
+        }
+
+        self.assertTrue(by_repository["Smartappli/DEALIoT"]["allowed"])
+        self.assertIn(
+            "airflow-orchestration",
+            by_repository["Smartappli/DEALIoT"]["module_slugs"],
+        )
+        self.assertIn(
+            "dealdata-core-layer",
+            by_repository["Smartappli/DEALData"]["public_module_slugs"],
         )
 
     def test_module_slugs_for_dealiot_push_changed_paths(self):

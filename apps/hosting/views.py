@@ -42,6 +42,10 @@ from .serializers import (
 )
 
 
+def _query_bool(value: str) -> bool:
+    return value.strip().casefold() in {"1", "true", "yes", "on"}
+
+
 class ModuleViewSet(viewsets.ModelViewSet):
     queryset = Module.objects.all().order_by("name")
     serializer_class = ModuleSerializer
@@ -52,8 +56,38 @@ class ModuleViewSet(viewsets.ModelViewSet):
     def get_queryset(self):  # type: ignore[override]
         queryset = super().get_queryset()
         enabled = self.request.query_params.get("enabled")
+        repository = self.request.query_params.get("repository")
+        repository_owner = self.request.query_params.get("repository_owner")
+        repository_name = self.request.query_params.get("repository_name")
+        deployment_target = self.request.query_params.get("deployment_target")
+        has_public_route = self.request.query_params.get("has_public_route")
         if enabled is not None:
-            queryset = queryset.filter(enabled=enabled.lower() == "true")
+            queryset = queryset.filter(enabled=_query_bool(enabled))
+        if repository:
+            if "/" in repository:
+                owner, name = repository.split("/", maxsplit=1)
+                queryset = queryset.filter(
+                    repository_owner=owner,
+                    repository_name=name,
+                )
+            else:
+                queryset = queryset.filter(repository_name=repository)
+        if repository_owner:
+            queryset = queryset.filter(repository_owner=repository_owner)
+        if repository_name:
+            queryset = queryset.filter(repository_name=repository_name)
+        if deployment_target:
+            queryset = queryset.filter(deployment_target=deployment_target)
+        if has_public_route is not None:
+            if _query_bool(has_public_route):
+                queryset = queryset.exclude(public_path="").exclude(upstream_host="")
+                queryset = queryset.filter(upstream_port__isnull=False)
+            else:
+                queryset = queryset.filter(
+                    Q(public_path="")
+                    | Q(upstream_host="")
+                    | Q(upstream_port__isnull=True),
+                )
         return queryset
 
     def perform_create(self, serializer):

@@ -54,6 +54,7 @@ Upstream modules (containers/services Django)
 
 - `GET /api/gateway/health/` : état du service gateway.
 - `POST /api/gateway/github/sync/` : récupère le dernier commit d’une branche, avec `repository_full_name` optionnel pour cibler `Smartappli/DEALIoT` ou `Smartappli/DEALData`.
+- `GET /api/gateway/github/repositories/` : liste les repositories intégrés, leurs événements autorisés, modules mappés et routes publiques déclarées.
 - `POST /api/gateway/apisix/publish/` : crée/met à jour une route APISIX, avec `dry_run=true` pour prévisualiser le payload sans appel admin APISIX.
 - `POST /api/gateway/github/webhook/` : webhook signé GitHub -> publication de route.
 - `GET/POST /api/hosting/modules/` : CRUD des modules hébergés.
@@ -238,7 +239,14 @@ System.out.println(response);
 
 ### Gestion complète des tools/apps
 
-- Filtres disponibles sur les listes:
+- Filtres disponibles sur les listes modules:
+  - `?enabled=true|false`
+  - `?repository=Smartappli/DEALIoT` ou `?repository=DEALIoT`
+  - `?repository_owner=Smartappli`
+  - `?repository_name=DEALData`
+  - `?deployment_target=compose|kubernetes|swarm|external`
+  - `?has_public_route=true|false`
+- Filtres disponibles sur les listes tools/applications:
   - `?enabled=true|false`
   - `?module_slug=<slug>`
   - `?search=<texte>` (nom, slug, description, slug module)

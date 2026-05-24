@@ -6,6 +6,7 @@ import json
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 from django.conf import settings
@@ -106,7 +107,11 @@ class GitHubService:
             raise ValueError(msg)
 
         owner, repository_name = repository.split("/", maxsplit=1)
-        url = f"https://api.github.com/repos/{owner}/{repository_name}/commits/{branch}"
+        branch_ref = quote(branch, safe="")
+        url = (
+            f"https://api.github.com/repos/{owner}/"
+            f"{repository_name}/commits/{branch_ref}"
+        )
         response = httpx.get(url, headers=self.headers(), timeout=15)
         response.raise_for_status()
         return response.json()
@@ -157,6 +162,47 @@ class GitHubService:
             event.casefold() == candidate.casefold()
             for candidate in allowed_events
         )
+
+    def repository_integrations(self) -> list[dict[str, Any]]:
+        integrations: list[dict[str, Any]] = []
+        for manifest in self.repository_manifests:
+            repository = str(manifest.get("repository_full_name", "")).strip()
+            path_mappings = [
+                mapping
+                for mapping in manifest.get("path_mappings", [])
+                if isinstance(mapping, dict)
+            ]
+            route_defaults = [
+                route
+                for route in manifest.get("route_defaults", [])
+                if isinstance(route, dict)
+            ]
+            module_slugs = _deduplicate(
+                [
+                    str(mapping.get("module_slug", "")).strip()
+                    for mapping in path_mappings
+                    if mapping.get("module_slug")
+                ],
+            )
+            integrations.append(
+                {
+                    "name": manifest.get("name", ""),
+                    "slug": manifest.get("slug", ""),
+                    "repository_full_name": repository,
+                    "allowed": self.is_allowed_repository_full_name(repository),
+                    "allowed_events": self.allowed_events_for_repository(repository),
+                    "module_slugs": module_slugs,
+                    "path_mapping_count": len(path_mappings),
+                    "public_module_slugs": _deduplicate(
+                        [
+                            str(route.get("module_slug", "")).strip()
+                            for route in route_defaults
+                            if route.get("module_slug")
+                        ],
+                    ),
+                },
+            )
+        return integrations
 
     def repository_full_name(self, payload: dict[str, Any]) -> str:
         repository = payload.get("repository")

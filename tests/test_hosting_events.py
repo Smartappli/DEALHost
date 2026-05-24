@@ -132,6 +132,36 @@ class HostingEventPublishingTests(SimpleTestCase):
         queryset.filter.assert_called_once_with(enabled=True)
 
     @patch("rest_framework.viewsets.ModelViewSet.get_queryset")
+    def test_module_get_queryset_applies_repository_routing_filters(
+        self,
+        super_queryset,
+    ):
+        queryset = Mock()
+        queryset.filter.return_value = queryset
+        queryset.exclude.return_value = queryset
+        super_queryset.return_value = queryset
+        view = ModuleViewSet()
+        view.request = SimpleNamespace(
+            query_params={
+                "repository": "Smartappli/DEALIoT",
+                "deployment_target": "kubernetes",
+                "has_public_route": "true",
+            },
+        )
+
+        result = view.get_queryset()
+
+        self.assertEqual(result, queryset)
+        queryset.filter.assert_any_call(
+            repository_owner="Smartappli",
+            repository_name="DEALIoT",
+        )
+        queryset.filter.assert_any_call(deployment_target="kubernetes")
+        queryset.filter.assert_any_call(upstream_port__isnull=False)
+        queryset.exclude.assert_any_call(public_path="")
+        queryset.exclude.assert_any_call(upstream_host="")
+
+    @patch("rest_framework.viewsets.ModelViewSet.get_queryset")
     def test_tool_get_queryset_applies_all_filters(self, super_queryset):
         queryset = Mock()
         queryset.filter.return_value = queryset

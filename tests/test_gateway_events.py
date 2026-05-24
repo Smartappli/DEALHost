@@ -3,7 +3,12 @@ from unittest.mock import MagicMock, patch
 from django.test import SimpleTestCase
 from rest_framework.test import APIRequestFactory
 
-from apps.gateway.views import GitHubWebhookView, PublishRouteView, SyncGitHubView
+from apps.gateway.views import (
+    GitHubRepositoriesView,
+    GitHubWebhookView,
+    PublishRouteView,
+    SyncGitHubView,
+)
 
 
 class GatewayEventPublishingTests(SimpleTestCase):
@@ -56,6 +61,23 @@ class GatewayEventPublishingTests(SimpleTestCase):
         github.latest_commit.assert_called_once_with(
             branch="main",
             repository_full_name="Smartappli/DEALData",
+        )
+
+    def test_github_repositories_lists_manifest_integrations(self):
+        request = self.factory.get("/api/gateway/github/repositories/")
+
+        response = GitHubRepositoriesView.as_view()(request)
+
+        repositories = {
+            item["repository_full_name"]: item
+            for item in response.data["repositories"]
+        }
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Smartappli/DEALIoT", repositories)
+        self.assertIn("Smartappli/DEALData", repositories)
+        self.assertIn(
+            "mqtt-kafka-bridge",
+            repositories["Smartappli/DEALIoT"]["module_slugs"],
         )
 
     @patch("apps.gateway.views.publish_event")

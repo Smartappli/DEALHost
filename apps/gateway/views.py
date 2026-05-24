@@ -61,6 +61,14 @@ class SyncGitHubView(APIView):
         )
 
 
+class GitHubRepositoriesView(APIView):
+    def get(self, request):
+        return Response(
+            {"repositories": GitHubService().repository_integrations()},
+            status=status.HTTP_200_OK,
+        )
+
+
 class PublishRouteView(APIView):
     def post(self, request):
         module_slug = request.data.get("module_slug")
