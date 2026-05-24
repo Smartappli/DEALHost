@@ -192,7 +192,14 @@ class ApisixService:
                     "response": None,
                 }
         except Exception:
-            pass
+            if module_slug in DEALIOT_MODULE_SLUGS and default_route is None:
+                return {
+                    "route_id": route_id,
+                    "skipped": True,
+                    "reason": "DEALIoT module has no public upstream",
+                    "payload": None,
+                    "response": None,
+                }
 
         public_path = "/" + public_path.strip("/")
         payload = {

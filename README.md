@@ -206,6 +206,7 @@ System.out.println(response);
 ### Auto découverte des tools et applications
 
 - Les manifests de découverte sont lus depuis:
+  - `manifests/modules/*.json`
   - `manifests/tools/*.json`
   - `manifests/applications/*.json`
 - Champs attendus pour les modules: `name`, `slug`, `image`, `branch` (optionnel), `repository_owner` (optionnel), `repository_name` (optionnel), `source_path` (optionnel), `deployment_target` (optionnel), `public_path` (optionnel), `upstream_host` (optionnel), `upstream_port` (optionnel), `healthcheck_path` (optionnel), `contract_topics` (optionnel), `enabled` (optionnel).
