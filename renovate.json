@@ -1,17 +1,31 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended"
+  "extends": ["config:recommended"],
+  "timezone": "Europe/Brussels",
+  "labels": ["dependencies", "renovate"],
+  "prConcurrentLimit": 3,
+  "enabledManagers": ["custom.regex"],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^manifests/modules/.*\\.json$/"],
+      "matchStrings": [
+        "\"image\"\\s*:\\s*\"(?<depName>[^\":]+(?:/[^\":]+)+):(?<currentValue>[^\"@]+)\""
+      ],
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
+    }
   ],
-  "timezone": "UTC",
-  "labels": [
-    "dependencies"
-  ],
-  "prConcurrentLimit": 10,
   "packageRules": [
     {
+      "matchManagers": ["custom.regex"],
+      "groupName": "hosting manifest images",
+      "labels": ["dependencies", "renovate", "hosting-manifest"]
+    },
+    {
       "matchUpdateTypes": ["major"],
-      "labels": ["dependencies", "major-update"]
+      "labels": ["dependencies", "renovate", "major-update"],
+      "dependencyDashboardApproval": true
     }
   ]
 }
