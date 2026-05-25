@@ -23,7 +23,7 @@ services:
       nats:
         condition: service_healthy
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/gateway/health/', timeout=5)"]
       interval: 15s
@@ -38,7 +38,7 @@ services:
     volumes:
       - valkey_data:/data
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     healthcheck:
       test: ["CMD", "valkey-cli", "ping"]
       interval: 10s
@@ -50,8 +50,8 @@ services:
     restart: unless-stopped
     command: ["-js", "-m", "8222"]
     ports:
-      - "4222:4222"
-      - "8222:8222"
+      - "127.0.0.1:4222:4222"
+      - "127.0.0.1:8222:8222"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8222/healthz"]
       interval: 10s
@@ -69,8 +69,8 @@ services:
       django-app:
         condition: service_healthy
     ports:
-      - "9080:9080"
-      - "9180:9180"
+      - "127.0.0.1:9080:9080"
+      - "127.0.0.1:9180:9180"
 
 volumes:
   valkey_data:

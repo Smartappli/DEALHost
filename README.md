@@ -290,7 +290,9 @@ System.out.println(response);
 ## Sécurité et production
 
 - Remplacer toutes les valeurs `replace-me` / placeholders.
-- Restreindre `ALLOWED_HOSTS` et exposer uniquement APISIX en edge.
+- Définir `DJANGO_ALLOWED_HOSTS`; en production, la configuration refuse de démarrer si cette variable est vide ou contient `*`.
+- Définir `DEALHOST_API_TOKENS` pour les clients API en lecture et `DEALHOST_ADMIN_API_TOKENS` pour les opérations d'administration (IAM, publication APISIX, autodiscovery, création/mise à jour hosting).
+- Restreindre l'exposition réseau et exposer uniquement APISIX en edge.
 - Protéger le webhook GitHub avec `GITHUB_WEBHOOK_SECRET`.
 - Restreindre les webhooks acceptés avec `GITHUB_ALLOWED_REPOSITORIES` (défaut: `Smartappli/DEALIoT,Smartappli/DEALData`).
 - Externaliser SQLite vers PostgreSQL en environnement de production.

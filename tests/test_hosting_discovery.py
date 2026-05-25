@@ -98,7 +98,7 @@ class HostingDiscoveryTests(TestCase):
         self.assertEqual(tool.current_version, "1.0.0")
         self.assertEqual(application.current_version, "2.1.0")
 
-    def test_autodiscover_reports_missing_module_without_failing(self):
+    def test_autodiscover_rolls_back_when_module_reference_is_missing(self):
         with TemporaryDirectory() as tmpdir:
             base = Path(tmpdir)
             (base / "tools").mkdir(parents=True)
@@ -116,11 +116,11 @@ class HostingDiscoveryTests(TestCase):
 
             report = auto_discover_tools_and_applications(manifests_dir=base)
 
-        self.assertEqual(report.tools_created, 1)
-        self.assertEqual(report.tool_versions_created, 1)
+        self.assertEqual(report.tools_created, 0)
+        self.assertEqual(report.tool_versions_created, 0)
+        self.assertTrue(report.rolled_back)
         self.assertTrue(report.errors)
-        tool = Tool.objects.get(slug="broken-tool")
-        self.assertEqual(tool.modules.count(), 0)
+        self.assertFalse(Tool.objects.filter(slug="broken-tool").exists())
 
     def test_autodiscover_rejects_invalid_version(self):
         with TemporaryDirectory() as tmpdir:
@@ -140,5 +140,6 @@ class HostingDiscoveryTests(TestCase):
             report = auto_discover_tools_and_applications(manifests_dir=base)
 
         self.assertEqual(report.applications_created, 0)
+        self.assertTrue(report.rolled_back)
         self.assertTrue(report.errors)
         self.assertFalse(HostedApplication.objects.filter(slug="bad-version").exists())

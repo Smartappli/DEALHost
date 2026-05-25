@@ -8,3 +8,5 @@ CACHES = {
         "LOCATION": "dealhost-tests",
     },
 }
+DEALHOST_API_TOKENS = ("test-token",)
+DEALHOST_ADMIN_API_TOKENS = ("test-admin-token",)

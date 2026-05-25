@@ -460,8 +460,13 @@ class HostingEventPublishingTests(SimpleTestCase):
         response = ManagementAutoDiscoverView().post(request)
 
         self.assertEqual(response, "redirected")
-        success_message.assert_called_once()
-        error_message.assert_called_once_with(request, "manifest parse error")
+        success_message.assert_not_called()
+        self.assertEqual(error_message.call_count, 2)
+        error_message.assert_any_call(
+            request,
+            "Autodiscovery failed; no changes were applied.",
+        )
+        error_message.assert_any_call(request, "manifest parse error")
         redirect_mock.assert_called_once_with("hosting-management")
 
     @patch("apps.hosting.views.Dataset")

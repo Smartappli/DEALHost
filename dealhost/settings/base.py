@@ -4,12 +4,12 @@ from pathlib import Path
 
 from django.utils.translation import gettext_lazy as _
 
-from .env import apisix_config, cache_config, get_env, github_config, nats_config
+from .env import apisix_config, cache_config, get_csv_env, get_env, github_config, nats_config
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 SECRET_KEY = get_env("DJANGO_SECRET_KEY", "replace-me")
 DEBUG = False
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = list(get_csv_env("DJANGO_ALLOWED_HOSTS", "*"))
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -102,6 +102,20 @@ PASSWORD_HASHERS = [
 ]
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "apps.common.authentication.EnvBearerAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.BasicAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
+}
+
+DEALHOST_API_TOKENS = get_csv_env("DEALHOST_API_TOKENS", "")
+DEALHOST_ADMIN_API_TOKENS = get_csv_env("DEALHOST_ADMIN_API_TOKENS", "")
 
 GITHUB = github_config()
 APISIX = apisix_config()

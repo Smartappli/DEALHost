@@ -31,10 +31,12 @@
     </form>
 
     <h1>{% trans "Management interface for modules, tools and applications" %}</h1>
-    <form method="post" action="{% url 'hosting-management-autodiscover' %}">
-      {% csrf_token %}
-      <button type="submit">{% trans "Autodiscover tools and applications" %}</button>
-    </form>
+    {% if user.is_staff %}
+      <form method="post" action="{% url 'hosting-management-autodiscover' %}">
+        {% csrf_token %}
+        <button type="submit">{% trans "Autodiscover tools and applications" %}</button>
+      </form>
+    {% endif %}
 
     {% if messages %}
       <ul class="messages">

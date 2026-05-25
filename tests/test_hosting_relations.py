@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APITestCase
@@ -34,6 +35,12 @@ class HostingRelationsTests(TestCase):
 
 class HostingManagementApiTests(APITestCase):
     def setUp(self) -> None:
+        self.user = get_user_model().objects.create_user(
+            username="api-admin",
+            password="secret",
+            is_staff=True,
+        )
+        self.client.force_authenticate(self.user)
         self.module_auth = Module.objects.create(
             name="Auth",
             slug="auth",
@@ -104,3 +111,47 @@ class HostingManagementApiTests(APITestCase):
         response = self.client.post(url, {"version": "2026"}, format="json")
         self.assertEqual(response.status_code, 400)
         self.assertIn("version", response.data)
+
+
+class HostingApiSecurityTests(APITestCase):
+    def test_modules_api_rejects_anonymous_requests(self) -> None:
+        response = self.client.get(reverse("modules-list"))
+
+        self.assertIn(response.status_code, {401, 403})
+
+    def test_modules_api_allows_readonly_bearer_token_for_reads(self) -> None:
+        Module.objects.create(
+            name="Core",
+            slug="core",
+            image="registry.example/core:1.0.0",
+        )
+
+        response = self.client.get(
+            reverse("modules-list"),
+            HTTP_AUTHORIZATION="Bearer test-token",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data[0]["slug"], "core")
+
+    def test_modules_api_rejects_readonly_bearer_token_for_writes(self) -> None:
+        response = self.client.post(
+            reverse("modules-list"),
+            {"name": "Core", "slug": "core", "image": "registry.example/core:1.0.0"},
+            format="json",
+            HTTP_AUTHORIZATION="Bearer test-token",
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertFalse(Module.objects.filter(slug="core").exists())
+
+    def test_modules_api_allows_admin_bearer_token_for_writes(self) -> None:
+        response = self.client.post(
+            reverse("modules-list"),
+            {"name": "Core", "slug": "core", "image": "registry.example/core:1.0.0"},
+            format="json",
+            HTTP_AUTHORIZATION="Bearer test-admin-token",
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.assertTrue(Module.objects.filter(slug="core").exists())

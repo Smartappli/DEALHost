@@ -24,6 +24,7 @@ class DiscoveryReport:
     applications_updated: int = 0
     tool_versions_created: int = 0
     application_versions_created: int = 0
+    rolled_back: bool = False
     errors: list[str] | None = None
 
     def to_dict(self) -> dict[str, object]:
@@ -36,6 +37,7 @@ class DiscoveryReport:
             "applications_updated": self.applications_updated,
             "tool_versions_created": self.tool_versions_created,
             "application_versions_created": self.application_versions_created,
+            "rolled_back": self.rolled_back,
             "errors": self.errors or [],
         }
 
@@ -227,4 +229,15 @@ def auto_discover_tools_and_applications(
         except ValueError as exc:
             report.errors.append(str(exc))
 
+    if report.errors:
+        report.rolled_back = True
+        report.modules_created = 0
+        report.modules_updated = 0
+        report.tools_created = 0
+        report.tools_updated = 0
+        report.applications_created = 0
+        report.applications_updated = 0
+        report.tool_versions_created = 0
+        report.application_versions_created = 0
+        transaction.set_rollback(True)
     return report

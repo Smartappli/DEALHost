@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db.models import Q
 from django.shortcuts import redirect
 from django.utils import timezone
@@ -10,10 +10,12 @@ from django.views import View
 from django.views.generic import TemplateView
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAdminUser
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.common.permissions import IsStaffOrAuthenticatedReadOnly
 from apps.common.events import publish_event
 from apps.common.events.subjects import (
     HOSTING_APPLICATION_CREATED,
@@ -49,6 +51,7 @@ def _query_bool(value: str) -> bool:
 class ModuleViewSet(viewsets.ModelViewSet):
     queryset = Module.objects.all().order_by("name")
     serializer_class = ModuleSerializer
+    permission_classes = [IsStaffOrAuthenticatedReadOnly]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["name", "slug", "branch", "source_path", "repository_name"]
     ordering_fields = ["name", "slug", "deployment_target", "created_at"]
@@ -129,6 +132,7 @@ class ToolViewSet(viewsets.ModelViewSet):
         Tool.objects.prefetch_related("modules", "versions").all().order_by("name")
     )
     serializer_class = ToolSerializer
+    permission_classes = [IsStaffOrAuthenticatedReadOnly]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["name", "slug", "description", "modules__slug", "current_version"]
     ordering_fields = ["name", "slug", "current_version", "created_at", "released_at"]
@@ -240,6 +244,7 @@ class HostedApplicationViewSet(viewsets.ModelViewSet):
         .order_by("name")
     )
     serializer_class = HostedApplicationSerializer
+    permission_classes = [IsStaffOrAuthenticatedReadOnly]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["name", "slug", "description", "modules__slug", "current_version"]
     ordering_fields = ["name", "slug", "current_version", "created_at", "released_at"]
@@ -358,6 +363,8 @@ class HostedApplicationViewSet(viewsets.ModelViewSet):
 
 
 class AutoDiscoverView(APIView):
+    permission_classes = [IsAdminUser]
+
     def post(self, request: Request) -> Response:
         report = auto_discover_tools_and_applications()
         return Response(report.to_dict(), status=status.HTTP_200_OK)
@@ -386,33 +393,41 @@ class ManagementInterfaceView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class ManagementAutoDiscoverView(View):
+class StaffRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
+    def test_func(self) -> bool:
+        return bool(self.request.user.is_staff)
+
+
+class ManagementAutoDiscoverView(StaffRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         manifests_dir = Path("manifests")
         report = auto_discover_tools_and_applications(manifests_dir=manifests_dir)
-        messages.success(
-            request,
-            (
-                _("Autodiscovery completed: ")
-                + _(
-                    "tools created=%(tools_created)s, tools updated=%(tools_updated)s, "
-                    "modules created=%(modules_created)s, modules updated=%(modules_updated)s, "
-                    "apps created=%(apps_created)s, apps updated=%(apps_updated)s, "
-                    "tool versions created=%(tool_versions_created)s, "
-                    "application versions created=%(application_versions_created)s.",
-                )
-                % {
-                    "modules_created": report.modules_created,
-                    "modules_updated": report.modules_updated,
-                    "tools_created": report.tools_created,
-                    "tools_updated": report.tools_updated,
-                    "apps_created": report.applications_created,
-                    "apps_updated": report.applications_updated,
-                    "tool_versions_created": report.tool_versions_created,
-                    "application_versions_created": report.application_versions_created,
-                }
-            ),
-        )
-        for error in report.errors or []:
-            messages.error(request, error)
+        if report.errors:
+            messages.error(request, _("Autodiscovery failed; no changes were applied."))
+            for error in report.errors:
+                messages.error(request, error)
+        else:
+            messages.success(
+                request,
+                (
+                    _("Autodiscovery completed: ")
+                    + _(
+                        "tools created=%(tools_created)s, tools updated=%(tools_updated)s, "
+                        "modules created=%(modules_created)s, modules updated=%(modules_updated)s, "
+                        "apps created=%(apps_created)s, apps updated=%(apps_updated)s, "
+                        "tool versions created=%(tool_versions_created)s, "
+                        "application versions created=%(application_versions_created)s.",
+                    )
+                    % {
+                        "modules_created": report.modules_created,
+                        "modules_updated": report.modules_updated,
+                        "tools_created": report.tools_created,
+                        "tools_updated": report.tools_updated,
+                        "apps_created": report.applications_created,
+                        "apps_updated": report.applications_updated,
+                        "tool_versions_created": report.tool_versions_created,
+                        "application_versions_created": report.application_versions_created,
+                    }
+                ),
+            )
         return redirect("hosting-management")

@@ -1,10 +1,13 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.models import Group, Permission
 from django.views.generic import TemplateView
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.request import Request
 from rest_framework.response import Response
+
+from apps.common.permissions import IsSuperUser
 
 from .serializers import (
     GroupSerializer,
@@ -24,6 +27,7 @@ class PermissionViewSet(viewsets.ReadOnlyModelViewSet):
         .order_by("content_type__app_label", "codename")
     )
     serializer_class = PermissionSerializer
+    permission_classes = [IsSuperUser]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = [
         "name",
@@ -37,6 +41,7 @@ class PermissionViewSet(viewsets.ReadOnlyModelViewSet):
 class GroupViewSet(viewsets.ModelViewSet):
     queryset = Group.objects.prefetch_related("permissions").all().order_by("name")
     serializer_class = GroupSerializer
+    permission_classes = [IsSuperUser]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["name", "permissions__codename"]
     ordering_fields = ["name"]
@@ -49,6 +54,7 @@ class UserViewSet(viewsets.ModelViewSet):
         .order_by("username")
     )
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    permission_classes = [IsSuperUser]
     search_fields = ["username", "email", "first_name", "last_name"]
     ordering_fields = ["username", "email", "date_joined", "last_login"]
 
@@ -67,7 +73,12 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class IamManagementInterfaceView(TemplateView):
+class SuperUserRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
+    def test_func(self) -> bool:
+        return bool(self.request.user.is_superuser)
+
+
+class IamManagementInterfaceView(SuperUserRequiredMixin, TemplateView):
     template_name = "iam/manage.html"
 
     def get_context_data(self, **kwargs):

@@ -1,7 +1,8 @@
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from django.test import SimpleTestCase
-from rest_framework.test import APIRequestFactory
+from rest_framework.test import APIRequestFactory, force_authenticate
 
 from apps.gateway.views import (
     GitHubRepositoriesView,
@@ -14,6 +15,8 @@ from apps.gateway.views import (
 class GatewayEventPublishingTests(SimpleTestCase):
     def setUp(self):
         self.factory = APIRequestFactory()
+        self.user = SimpleNamespace(is_authenticated=True, is_staff=False)
+        self.admin_user = SimpleNamespace(is_authenticated=True, is_staff=True)
 
     @patch("apps.gateway.views.publish_event")
     @patch("apps.gateway.views.ApisixService")
@@ -28,6 +31,7 @@ class GatewayEventPublishingTests(SimpleTestCase):
             {"module_slug": "core"},
             format="json",
         )
+        force_authenticate(request, user=self.admin_user)
 
         response = PublishRouteView.as_view()(request)
 
@@ -53,6 +57,7 @@ class GatewayEventPublishingTests(SimpleTestCase):
             {"branch": "main", "repository_full_name": "Smartappli/DEALData"},
             format="json",
         )
+        force_authenticate(request, user=self.user)
 
         response = SyncGitHubView.as_view()(request)
 
@@ -65,6 +70,7 @@ class GatewayEventPublishingTests(SimpleTestCase):
 
     def test_github_repositories_lists_manifest_integrations(self):
         request = self.factory.get("/api/gateway/github/repositories/")
+        force_authenticate(request, user=self.user)
 
         response = GitHubRepositoriesView.as_view()(request)
 

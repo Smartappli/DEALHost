@@ -1,5 +1,6 @@
 from django.utils.translation import gettext as _
 from rest_framework import status
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -23,11 +24,15 @@ def _is_truthy(value):
 
 
 class HealthView(APIView):
+    permission_classes = [AllowAny]
+
     def get(self, request):
         return Response({"status": "ok", "service": "gateway"})
 
 
 class SyncGitHubView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def post(self, request):
         branch = request.data.get("branch", "main")
         repository = request.data.get("repository_full_name")
@@ -62,6 +67,8 @@ class SyncGitHubView(APIView):
 
 
 class GitHubRepositoriesView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
         return Response(
             {"repositories": GitHubService().repository_integrations()},
@@ -70,6 +77,8 @@ class GitHubRepositoriesView(APIView):
 
 
 class PublishRouteView(APIView):
+    permission_classes = [IsAdminUser]
+
     def post(self, request):
         module_slug = request.data.get("module_slug")
         dry_run = _is_truthy(request.data.get("dry_run", False))
@@ -108,7 +117,7 @@ class PublishRouteView(APIView):
 
 class GitHubWebhookView(APIView):
     authentication_classes = []
-    permission_classes = []
+    permission_classes = [AllowAny]
 
     def post(self, request):
         raw_payload = request.body

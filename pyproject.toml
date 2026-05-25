@@ -20,8 +20,12 @@ dependencies = [
   "nats-py>=2.14.0,<3.0",
 ]
 
-[tool.setuptools]
-packages = ["dealhost", "dealhost.settings", "apps", "apps.common", "apps.common.events", "apps.hosting", "apps.gateway"]
+[tool.setuptools.packages.find]
+include = ["dealhost*", "apps*"]
+
+[tool.setuptools.package-data]
+"apps.hosting" = ["templates/hosting/*.html"]
+"apps.iam" = ["templates/iam/*.html"]
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "dealhost.settings.test"
