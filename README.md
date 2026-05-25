@@ -213,7 +213,7 @@ System.out.println(response);
   - `manifests/repositories/*.json`
 - Champs attendus pour les modules: `name`, `slug`, `image`, `branch` (optionnel), `repository_owner` (optionnel), `repository_name` (optionnel), `source_path` (optionnel), `deployment_target` (optionnel), `public_path` (optionnel), `upstream_host` (optionnel), `upstream_port` (optionnel), `healthcheck_path` (optionnel), `contract_topics` (optionnel), `production_ready` (optionnel), `enabled` (optionnel).
 - Champs attendus pour les tools/applications: `name`, `slug`, `description` (optionnel), `enabled` (optionnel), `module_slugs` (optionnel), `version` (optionnel, semver), `version_notes` (optionnel).
-- Champs attendus pour les repositories: `repository_full_name`, `allowed_events`, `path_mappings` (`prefix`, `module_slug`) et `route_defaults` (`module_slug`, `public_path`, `upstream_host`, `upstream_port`).
+- Champs attendus pour les repositories: `repository_full_name`, `source_dependency` (`type`, `repository_full_name`, `versioning`, `version`, `ref`, `commit_sha`), `allowed_events`, `path_mappings` (`prefix`, `module_slug`) et `route_defaults` (`module_slug`, `public_path`, `upstream_host`, `upstream_port`).
 - L’auto découverte crée/met à jour automatiquement les objets `Module`, `Tool` et `HostedApplication`, synchronise leurs liens modules, et enregistre l'historique des versions quand `version` est fourni.
 - Les manifests repositories pilotent le mapping webhook GitHub -> modules et les routes APISIX par défaut; ils ne créent pas d'objets en base.
 - Tout `source_path` rattaché à `Smartappli/DEALIoT` ou `Smartappli/DEALData` doit être couvert par un `path_mappings` du manifest repository correspondant.
@@ -322,6 +322,7 @@ System.out.println(response);
 
 - `Dependabot` est configuré via `.github/dependabot.yml` pour surveiller chaque semaine les dépendances Python, Rust, Go, Docker Compose et GitHub Actions. Les updates runtime (`pip` racine, Compose, GitHub Actions) portent le label `runtime-risk`.
 - `Renovate` est conservé pour les manifests non standard `manifests/modules/*.json`, avec scan regex des images Docker, labels séparés pour `smartappli-ghcr` et `public-image`, et approbation obligatoire des majors via Dependency Dashboard.
+- Les manifests repositories épinglent aussi les dépendances source Smartappli: DEALIoT via tag GitHub, DEALData via commit SHA tant qu'aucun tag n'est publié.
 - Le workflow Renovate utilise `secrets.RENOVATE_TOKEN` si disponible, puis le token GitHub du workflow en repli. Un token dédié reste recommandé pour éviter les limites de permissions et de déclenchement.
 - Les tags Docker `latest`, implicites ou `local-placeholder` doivent rester associés à `production_ready=false`; les modules prêts production doivent utiliser un tag explicite ou un digest.
 

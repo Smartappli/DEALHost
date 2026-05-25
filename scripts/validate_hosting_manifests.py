@@ -13,6 +13,8 @@ MANIFESTS_DIR = ROOT / "manifests"
 APISIX_ROUTES_FILE = ROOT / "infra" / "apisix" / "routes.json"
 RENOVATE_FILE = ROOT / "renovate.json"
 UNPINNED_IMAGE_TAGS = {"latest", "local-placeholder"}
+GIT_SHA_PATTERN = re.compile(r"^[0-9a-f]{40}$")
+SOURCE_DEPENDENCY_VERSIONING = {"github-tags", "git-sha"}
 
 
 def _load_json(path: Path, errors: list[str]) -> dict[str, Any]:
@@ -225,6 +227,78 @@ def _validate_tools_and_applications(
             _validate_module_refs(payload, path, module_slugs, errors)
 
 
+def _validate_source_dependency(
+    payload: dict[str, Any],
+    path: Path,
+    repository: str,
+    errors: list[str],
+) -> None:
+    dependency = payload.get("source_dependency")
+    if not isinstance(dependency, dict):
+        errors.append(f"{path}: missing or invalid object field 'source_dependency'")
+        return
+
+    dependency_type = _required_string(dependency, path, "type", errors)
+    if dependency_type and dependency_type != "github-repository":
+        errors.append(
+            f"{path}: source_dependency.type must be 'github-repository'",
+        )
+
+    dependency_repository = _required_string(
+        dependency,
+        path,
+        "repository_full_name",
+        errors,
+    )
+    if (
+        dependency_repository
+        and repository
+        and dependency_repository.casefold() != repository.casefold()
+    ):
+        errors.append(
+            f"{path}: source_dependency.repository_full_name must match "
+            "repository_full_name",
+        )
+
+    versioning = _required_string(dependency, path, "versioning", errors)
+    if versioning and versioning not in SOURCE_DEPENDENCY_VERSIONING:
+        allowed = ", ".join(sorted(SOURCE_DEPENDENCY_VERSIONING))
+        errors.append(
+            f"{path}: source_dependency.versioning must be one of: {allowed}",
+        )
+
+    version = _required_string(dependency, path, "version", errors)
+    ref = _required_string(dependency, path, "ref", errors)
+    commit_sha = _required_string(dependency, path, "commit_sha", errors)
+    if commit_sha and not GIT_SHA_PATTERN.fullmatch(commit_sha):
+        errors.append(
+            f"{path}: source_dependency.commit_sha must be a 40-character "
+            "lowercase Git SHA",
+        )
+    if versioning == "github-tags" and ref and not ref.startswith("refs/tags/"):
+        errors.append(
+            f"{path}: source_dependency.ref must point to refs/tags/ "
+            "when versioning is github-tags",
+        )
+    if versioning == "github-tags" and version and ref != f"refs/tags/{version}":
+        errors.append(
+            f"{path}: source_dependency.ref must match "
+            "refs/tags/{source_dependency.version}",
+        )
+    if versioning == "git-sha" and ref and not ref.startswith("refs/heads/"):
+        errors.append(
+            f"{path}: source_dependency.ref must point to refs/heads/ "
+            "when versioning is git-sha",
+        )
+    if versioning == "git-sha" and version and commit_sha:
+        expected_version = f"sha-{commit_sha[:12]}"
+        if version != expected_version:
+            errors.append(
+                f"{path}: source_dependency.version must be '{expected_version}' "
+                "for git-sha dependencies",
+            )
+
+
 def _validate_repository_manifests(
     module_slugs: set[str],
     public_modules: dict[str, dict[str, Any]],
@@ -241,6 +315,7 @@ def _validate_repository_manifests(
         if repository and repository in repositories_seen:
             errors.append(f"{path}: duplicate repository '{repository}'")
         repositories_seen.add(repository)
+        _validate_source_dependency(payload, path, repository, errors)
 
         allowed_events = payload.get("allowed_events", [])
         if not isinstance(allowed_events, list) or not allowed_events:

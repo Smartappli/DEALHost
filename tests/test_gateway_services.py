@@ -111,6 +111,14 @@ class GitHubServiceTests(SimpleTestCase):
             "dealdata-core-layer",
             by_repository["Smartappli/DEALData"]["public_module_slugs"],
         )
+        self.assertEqual(
+            by_repository["Smartappli/DEALIoT"]["source_dependency"]["version"],
+            "v1.1.1",
+        )
+        self.assertEqual(
+            by_repository["Smartappli/DEALData"]["source_dependency"]["versioning"],
+            "git-sha",
+        )
 
     def test_module_slugs_for_dealiot_push_changed_paths(self):
         payload = {

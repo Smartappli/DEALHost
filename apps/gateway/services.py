@@ -177,6 +177,9 @@ class GitHubService:
                 for route in manifest.get("route_defaults", [])
                 if isinstance(route, dict)
             ]
+            source_dependency = manifest.get("source_dependency", {})
+            if not isinstance(source_dependency, dict):
+                source_dependency = {}
             module_slugs = _deduplicate(
                 [
                     str(mapping.get("module_slug", "")).strip()
@@ -191,6 +194,7 @@ class GitHubService:
                     "repository_full_name": repository,
                     "allowed": self.is_allowed_repository_full_name(repository),
                     "allowed_events": self.allowed_events_for_repository(repository),
+                    "source_dependency": source_dependency,
                     "module_slugs": module_slugs,
                     "path_mapping_count": len(path_mappings),
                     "public_module_slugs": _deduplicate(

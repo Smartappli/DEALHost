@@ -2,6 +2,14 @@
   "name": "DEALData",
   "slug": "dealdata",
   "repository_full_name": "Smartappli/DEALData",
+  "source_dependency": {
+    "type": "github-repository",
+    "repository_full_name": "Smartappli/DEALData",
+    "versioning": "git-sha",
+    "version": "sha-078d5543b33d",
+    "ref": "refs/heads/main",
+    "commit_sha": "078d5543b33def3cac04021686195bfa59cdc43f"
+  },
   "allowed_events": [
     "push"
   ],

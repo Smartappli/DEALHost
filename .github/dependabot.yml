@@ -2,6 +2,7 @@ version: 2
 
 # Dependabot covers standard manifests in this repository.
 # Renovate is kept for non-standard integration manifests such as manifests/modules/*.json.
+# Smartappli source dependencies are pinned in manifests/repositories/*.json.
 updates:
   - package-ecosystem: "pip"
     directory: "/"

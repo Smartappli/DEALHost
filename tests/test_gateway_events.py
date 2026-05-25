@@ -79,6 +79,10 @@ class GatewayEventPublishingTests(SimpleTestCase):
             "mqtt-kafka-bridge",
             repositories["Smartappli/DEALIoT"]["module_slugs"],
         )
+        self.assertEqual(
+            repositories["Smartappli/DEALIoT"]["source_dependency"]["version"],
+            "v1.1.1",
+        )
 
     @patch("apps.gateway.views.publish_event")
     @patch("apps.gateway.views.ApisixService")

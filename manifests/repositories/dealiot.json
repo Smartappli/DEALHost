@@ -2,6 +2,14 @@
   "name": "DEALIoT",
   "slug": "dealiot",
   "repository_full_name": "Smartappli/DEALIoT",
+  "source_dependency": {
+    "type": "github-repository",
+    "repository_full_name": "Smartappli/DEALIoT",
+    "versioning": "github-tags",
+    "version": "v1.1.1",
+    "ref": "refs/tags/v1.1.1",
+    "commit_sha": "282a36be63d9798ba9eee45819ee4fd9faa98271"
+  },
   "allowed_events": [
     "push"
   ],
