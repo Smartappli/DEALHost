@@ -2,7 +2,19 @@
 
 Ce dépôt contient un socle **Django 6 ASGI** (servi par **Granian**) pour exposer une plateforme d’hébergement modulaire reliée aux dépôts GitHub **`Smartappli/DEALIoT`** et **`Smartappli/DEALData`**, pilotée via **Apache APISIX**.
 
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Smartappli_DEALHost&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Smartappli_DEALHost)
+[![CI Django DEALHost](https://github.com/Smartappli/DEALHost/actions/workflows/ci.yml/badge.svg)](https://github.com/Smartappli/DEALHost/actions/workflows/ci.yml)
+[![SDK Unit Tests](https://github.com/Smartappli/DEALHost/actions/workflows/sdk-unit-tests.yml/badge.svg)](https://github.com/Smartappli/DEALHost/actions/workflows/sdk-unit-tests.yml)
+[![Validate Hosting Manifests](https://github.com/Smartappli/DEALHost/actions/workflows/hosting-manifests-validate.yml/badge.svg)](https://github.com/Smartappli/DEALHost/actions/workflows/hosting-manifests-validate.yml)
+[![Validate APISIX Routes](https://github.com/Smartappli/DEALHost/actions/workflows/apisix-routes-validate.yml/badge.svg)](https://github.com/Smartappli/DEALHost/actions/workflows/apisix-routes-validate.yml)
+[![Pre-commit](https://github.com/Smartappli/DEALHost/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/Smartappli/DEALHost/actions/workflows/pre-commit.yml)
+[![CodeQL](https://github.com/Smartappli/DEALHost/actions/workflows/codeql.yml/badge.svg)](https://github.com/Smartappli/DEALHost/actions/workflows/codeql.yml)
+[![Bandit](https://github.com/Smartappli/DEALHost/actions/workflows/bandit.yml/badge.svg)](https://github.com/Smartappli/DEALHost/actions/workflows/bandit.yml)
+[![OSV Scanner](https://github.com/Smartappli/DEALHost/actions/workflows/osv-scanner.yml/badge.svg)](https://github.com/Smartappli/DEALHost/actions/workflows/osv-scanner.yml)
+[![Codacy Security Scan](https://github.com/Smartappli/DEALHost/actions/workflows/codacy.yml/badge.svg)](https://github.com/Smartappli/DEALHost/actions/workflows/codacy.yml)
+[![Dependabot Updates](https://github.com/Smartappli/DEALHost/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/Smartappli/DEALHost/actions/workflows/dependabot/dependabot-updates)
+[![Renovate](https://github.com/Smartappli/DEALHost/actions/workflows/renovate.yml/badge.svg)](https://github.com/Smartappli/DEALHost/actions/workflows/renovate.yml)
+[![SonarCloud](https://github.com/Smartappli/DEALHost/actions/workflows/sonarcloud.yml/badge.svg)](https://github.com/Smartappli/DEALHost/actions/workflows/sonarcloud.yml)
+
 [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=Smartappli_DEALHost&metric=bugs)](https://sonarcloud.io/summary/new_code?id=Smartappli_DEALHost)
 [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=Smartappli_DEALHost&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=Smartappli_DEALHost)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=Smartappli_DEALHost&metric=coverage)](https://sonarcloud.io/summary/new_code?id=Smartappli_DEALHost)
@@ -13,6 +25,7 @@ Ce dépôt contient un socle **Django 6 ASGI** (servi par **Granian**) pour expo
 [![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=Smartappli_DEALHost&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=Smartappli_DEALHost)
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=Smartappli_DEALHost&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=Smartappli_DEALHost)
 [![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=Smartappli_DEALHost&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=Smartappli_DEALHost)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Smartappli_DEALHost&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Smartappli_DEALHost)
 
 
 ## Objectif
