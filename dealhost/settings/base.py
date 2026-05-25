@@ -4,7 +4,14 @@ from pathlib import Path
 
 from django.utils.translation import gettext_lazy as _
 
-from .env import apisix_config, cache_config, get_csv_env, get_env, github_config, nats_config
+from .env import (
+    apisix_config,
+    cache_config,
+    get_csv_env,
+    get_env,
+    github_config,
+    nats_config,
+)
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 SECRET_KEY = get_env("DJANGO_SECRET_KEY", "replace-me")

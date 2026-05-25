@@ -75,8 +75,7 @@ class GatewayEventPublishingTests(SimpleTestCase):
         response = GitHubRepositoriesView.as_view()(request)
 
         repositories = {
-            item["repository_full_name"]: item
-            for item in response.data["repositories"]
+            item["repository_full_name"]: item for item in response.data["repositories"]
         }
         self.assertEqual(response.status_code, 200)
         self.assertIn("Smartappli/DEALIoT", repositories)

@@ -140,8 +140,7 @@ class GitHubService:
         repository = repository.strip()
         allowed = self.allowed_repository_full_names()
         return bool(repository) and any(
-            repository.casefold() == candidate.casefold()
-            for candidate in allowed
+            repository.casefold() == candidate.casefold() for candidate in allowed
         )
 
     def repository_manifest(self, repository: str) -> dict[str, Any] | None:
@@ -159,8 +158,7 @@ class GitHubService:
     def is_allowed_event(self, repository: str, event: str) -> bool:
         allowed_events = self.allowed_events_for_repository(repository)
         return any(
-            event.casefold() == candidate.casefold()
-            for candidate in allowed_events
+            event.casefold() == candidate.casefold() for candidate in allowed_events
         )
 
     def repository_integrations(self) -> list[dict[str, Any]]:

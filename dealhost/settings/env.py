@@ -54,9 +54,7 @@ def get_env(name: str, default: str | None = None) -> str:
 
 def get_csv_env(name: str, default: str) -> tuple[str, ...]:
     return tuple(
-        item.strip()
-        for item in get_env(name, default).split(",")
-        if item.strip()
+        item.strip() for item in get_env(name, default).split(",") if item.strip()
     )
 
 
@@ -75,7 +73,9 @@ def get_secret_csv_env(
 ) -> tuple[str, ...]:
     values = get_csv_env(name, default)
     if not allow_placeholder and any(_is_placeholder(value) for value in values):
-        raise RuntimeError(f"Invalid placeholder secret in environment variable: {name}")
+        raise RuntimeError(
+            f"Invalid placeholder secret in environment variable: {name}"
+        )
     return values
 
 
@@ -93,9 +93,8 @@ def get_secret_env(
 
 def _is_placeholder(value: str) -> bool:
     normalized = value.strip()
-    return (
-        normalized in PLACEHOLDER_VALUES
-        or (normalized.startswith("<") and normalized.endswith(">"))
+    return normalized in PLACEHOLDER_VALUES or (
+        normalized.startswith("<") and normalized.endswith(">")
     )
 
 
