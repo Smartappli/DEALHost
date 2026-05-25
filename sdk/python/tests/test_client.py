@@ -49,7 +49,12 @@ class DealHostClientTests(unittest.TestCase):
 
     @patch("dealhost_sdk.client.httpx.Client", FakeHttpxClient)
     def test_create_tool_sends_expected_request(self):
-        client = DealHostClient("https://dealhost.test/", token="secret", timeout=5.0)
+        auth_header_value = "unit-test"
+        client = DealHostClient(
+            "https://dealhost.test/",
+            token=auth_header_value,
+            timeout=5.0,
+        )
 
         result = client.create_tool(
             name="Tool",
@@ -64,7 +69,10 @@ class DealHostClientTests(unittest.TestCase):
         self.assertEqual("https://dealhost.test", fake_client.kwargs["base_url"])
         self.assertEqual(5.0, fake_client.kwargs["timeout"])
         self.assertEqual(
-            {"Accept": "application/json", "Authorization": "Bearer secret"},
+            {
+                "Accept": "application/json",
+                "Authorization": f"Bearer {auth_header_value}",
+            },
             fake_client.kwargs["headers"],
         )
         self.assertEqual(
