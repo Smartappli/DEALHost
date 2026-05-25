@@ -115,7 +115,7 @@ def auto_discover_tools_and_applications(
     for file_path in sorted((base / "modules").glob("*.json")):
         try:
             payload = _read_manifest(file_path, ("name", "slug", "image"))
-            _, created = Module.objects.update_or_create(
+            created = Module.objects.update_or_create(
                 slug=str(payload["slug"]),
                 defaults={
                     "name": str(payload["name"]),
@@ -139,7 +139,7 @@ def auto_discover_tools_and_applications(
                     ),
                     "enabled": _as_bool(payload.get("enabled"), True),
                 },
-            )
+            )[1]
             if created:
                 report.modules_created += 1
             else:
