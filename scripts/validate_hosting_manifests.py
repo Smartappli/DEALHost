@@ -463,7 +463,9 @@ def _validate_renovate(errors: list[str]) -> None:
 
     managers = payload.get("customManagers", [])
     if not isinstance(managers, list) or not managers:
-        errors.append(f"{RENOVATE_FILE}: customManagers must define manifest image scan")
+        errors.append(
+            f"{RENOVATE_FILE}: customManagers must define manifest image scan"
+        )
         return
 
     has_module_image_manager = any(
@@ -472,7 +474,9 @@ def _validate_renovate(errors: list[str]) -> None:
             "manifests/modules" in str(pattern)
             for pattern in manager.get("managerFilePatterns", [])
         )
-        and any("currentValue" in str(match) for match in manager.get("matchStrings", []))
+        and any(
+            "currentValue" in str(match) for match in manager.get("matchStrings", [])
+        )
         for manager in managers
     )
     if not has_module_image_manager:
@@ -497,8 +501,7 @@ def _validate_renovate(errors: list[str]) -> None:
         errors.append(f"{RENOVATE_FILE}: missing Smartappli GHCR package rule")
 
     has_public_image_rule = any(
-        isinstance(rule, dict)
-        and "public-image" in rule.get("labels", [])
+        isinstance(rule, dict) and "public-image" in rule.get("labels", [])
         for rule in package_rules
     )
     if not has_public_image_rule:
