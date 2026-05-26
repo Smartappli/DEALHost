@@ -455,6 +455,7 @@ class HostingEventPublishingTests(SimpleTestCase):
             tool_versions_created=5,
             application_versions_created=6,
             errors=["manifest parse error"],
+            internal_errors=["manifest parse error"],
         )
         autodiscover.return_value = report
         redirect_mock.return_value = "redirected"
@@ -469,7 +470,10 @@ class HostingEventPublishingTests(SimpleTestCase):
             request,
             "Autodiscovery failed; no changes were applied.",
         )
-        error_message.assert_any_call(request, "manifest parse error")
+        error_message.assert_any_call(
+            request,
+            "Autodiscovery failed; details are available in server logs.",
+        )
         redirect_mock.assert_called_once_with("hosting-management")
 
     @patch("apps.hosting.views.Dataset")
