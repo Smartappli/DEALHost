@@ -43,6 +43,7 @@ class DiscoveryReport:
             self.errors.append(public_autodiscovery_error())
 
     def to_dict(self, *, include_errors: bool = True) -> dict[str, object]:
+        # Raw diagnostics are kept in internal_errors and must not be serialized.
         return {
             "modules_created": self.modules_created,
             "modules_updated": self.modules_updated,

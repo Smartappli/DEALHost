@@ -32,7 +32,10 @@ from apps.common.events.subjects import (
     HOSTING_TOOL_VERSION_RELEASED,
 )
 
-from .discovery import auto_discover_tools_and_applications, public_autodiscovery_error
+from .discovery import (
+    auto_discover_tools_and_applications,
+    public_autodiscovery_error,
+)
 from .models import Dataset, HostedApplication, Module, Tool
 from .serializers import (
     ApplicationVersionSerializer,

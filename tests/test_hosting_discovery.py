@@ -4,7 +4,10 @@ from tempfile import TemporaryDirectory
 
 from django.test import TestCase
 
-from apps.hosting.discovery import auto_discover_tools_and_applications
+from apps.hosting.discovery import (
+    auto_discover_tools_and_applications,
+    public_autodiscovery_error,
+)
 from apps.hosting.models import HostedApplication, Module, Tool
 
 
@@ -141,5 +144,7 @@ class HostingDiscoveryTests(TestCase):
 
         self.assertEqual(report.applications_created, 0)
         self.assertTrue(report.rolled_back)
-        self.assertTrue(report.errors)
+        self.assertEqual(report.errors, [public_autodiscovery_error()])
+        self.assertTrue(report.internal_errors)
+        self.assertIn("invalid version", report.internal_errors[0])
         self.assertFalse(HostedApplication.objects.filter(slug="bad-version").exists())
