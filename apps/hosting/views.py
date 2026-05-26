@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 from django.contrib import messages
@@ -42,6 +43,8 @@ from .serializers import (
     ToolVersionSerializer,
     VersionCreateSerializer,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def _query_bool(value: str) -> bool:
@@ -367,7 +370,16 @@ class AutoDiscoverView(APIView):
 
     def post(self, request: Request) -> Response:
         report = auto_discover_tools_and_applications()
-        return Response(report.to_dict(), status=status.HTTP_200_OK)
+        if report.errors:
+            logger.warning(
+                "Hosting autodiscovery failed with %d error(s)",
+                len(report.errors),
+                extra={"autodiscovery_errors": report.errors},
+            )
+        return Response(
+            report.to_dict(include_errors=False),
+            status=status.HTTP_200_OK,
+        )
 
 
 class ManagementInterfaceView(LoginRequiredMixin, TemplateView):

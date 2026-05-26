@@ -1,4 +1,4 @@
-from .base import *  # noqa: F403
+from .base import *  # noqa: F401,F403
 from .env import (
     apisix_config,
     get_required_csv_env,

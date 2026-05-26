@@ -13,15 +13,19 @@ from dealhost.settings.env import ApisixConfig, GitHubConfig
     GITHUB=GitHubConfig(
         owner="Smartappli",
         repository="DEALIoT",
-        token="token",
-        webhook_secret="secret-test",
+        token="token",  # nosec B106 - test fixture token only.
+        webhook_secret="secret-test",  # nosec B106 - test fixture secret only.
         allowed_repositories=("Smartappli/DEALIoT", "Smartappli/DEALData"),
     ),
 )
 class GitHubServiceTests(SimpleTestCase):
     def test_verify_signature_true(self):
         payload = b'{"ref":"refs/heads/main"}'
-        digest = hmac.new(b"secret-test", payload, hashlib.sha256).hexdigest()
+        digest = hmac.new(
+            b"secret-test",  # nosec B105 - test fixture secret only.
+            payload,
+            hashlib.sha256,
+        ).hexdigest()
         signature = f"sha256={digest}"
 
         self.assertTrue(GitHubService().verify_signature(payload, signature))

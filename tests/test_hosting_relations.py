@@ -37,7 +37,7 @@ class HostingManagementApiTests(APITestCase):
     def setUp(self) -> None:
         self.user = get_user_model().objects.create_user(
             username="api-admin",
-            password="secret",
+            password="secret",  # nosec B106 - test fixture password only.
             is_staff=True,
         )
         self.client.force_authenticate(self.user)

@@ -27,7 +27,13 @@ class DiscoveryReport:
     rolled_back: bool = False
     errors: list[str] | None = None
 
-    def to_dict(self) -> dict[str, object]:
+    def to_dict(self, *, include_errors: bool = True) -> dict[str, object]:
+        errors = self.errors or []
+        public_errors = errors
+        if not include_errors and errors:
+            public_errors = [
+                _("Autodiscovery failed; details are available in server logs."),
+            ]
         return {
             "modules_created": self.modules_created,
             "modules_updated": self.modules_updated,
@@ -38,7 +44,7 @@ class DiscoveryReport:
             "tool_versions_created": self.tool_versions_created,
             "application_versions_created": self.application_versions_created,
             "rolled_back": self.rolled_back,
-            "errors": self.errors or [],
+            "errors": public_errors,
         }
 
 

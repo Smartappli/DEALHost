@@ -12,7 +12,7 @@ class IamSecurityTests(APITestCase):
     def test_iam_api_allows_superuser_requests(self) -> None:
         user = get_user_model().objects.create_user(
             username="admin",
-            password="secret",
+            password="secret",  # nosec B106 - test fixture password only.
             is_staff=True,
             is_superuser=True,
         )
@@ -25,7 +25,7 @@ class IamSecurityTests(APITestCase):
     def test_iam_api_rejects_non_superuser_staff(self) -> None:
         user = get_user_model().objects.create_user(
             username="staff",
-            password="secret",
+            password="secret",  # nosec B106 - test fixture password only.
             is_staff=True,
             is_superuser=False,
         )
@@ -60,7 +60,7 @@ class IamSecurityTests(APITestCase):
     def test_iam_manage_rejects_non_superuser_staff(self) -> None:
         user = get_user_model().objects.create_user(
             username="staff",
-            password="secret",
+            password="secret",  # nosec B106 - test fixture password only.
             is_staff=True,
             is_superuser=False,
         )

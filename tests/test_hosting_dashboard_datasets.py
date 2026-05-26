@@ -8,7 +8,10 @@ from apps.hosting.models import Dataset
 class HostingDashboardDatasetsTests(TestCase):
     def test_dashboard_shows_only_accessible_datasets_for_logged_user(self):
         group = Group.objects.create(name="analysts")
-        user = User.objects.create_user(username="alice", password="secret")
+        user = User.objects.create_user(
+            username="alice",
+            password="secret",  # nosec B106 - test fixture password only.
+        )
         user.groups.add(group)
 
         direct_dataset = Dataset.objects.create(
@@ -33,7 +36,10 @@ class HostingDashboardDatasetsTests(TestCase):
         )
         hidden_dataset.users.add(user)
 
-        self.client.login(username="alice", password="secret")
+        self.client.login(
+            username="alice",
+            password="secret",  # nosec B106 - test fixture password only.
+        )
         response = self.client.get(reverse("hosting-management"))
 
         self.assertEqual(response.status_code, 200)

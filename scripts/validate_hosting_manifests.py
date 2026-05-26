@@ -106,6 +106,18 @@ def _image_tag(image: str) -> str:
     return image.rsplit(":", maxsplit=1)[-1]
 
 
+def _has_tagged_repository_image(payload: dict[str, Any]) -> bool:
+    image = payload.get("image")
+    if not isinstance(image, str):
+        return False
+
+    image_without_digest = image.split("@", maxsplit=1)[0]
+    repository, separator, tag = image_without_digest.rpartition(":")
+    if not separator or not tag:
+        return False
+    return "/" in repository
+
+
 def _is_source_path_covered(
     source_path: str,
     module_slug: str,
@@ -507,17 +519,13 @@ def _validate_renovate(errors: list[str]) -> None:
     if not has_public_image_rule:
         errors.append(f"{RENOVATE_FILE}: missing public image package rule")
 
-    image_pattern = re.compile(
-        r'"image"\s*:\s*"(?P<dep_name>[^":]+(?:/[^":]+)+):(?P<current_value>[^"@]+)"',
-    )
-    image_matches = [
-        match
+    has_matchable_module_image = any(
+        _has_tagged_repository_image(_load_json(path, errors))
         for path in _json_files(MANIFESTS_DIR / "modules")
-        for match in image_pattern.finditer(path.read_text(encoding="utf-8"))
-    ]
-    if not image_matches:
+    )
+    if not has_matchable_module_image:
         errors.append(
-            f"{RENOVATE_FILE}: custom module image regex does not match any module",
+            f"{RENOVATE_FILE}: custom module image manager does not match any module",
         )
 
 

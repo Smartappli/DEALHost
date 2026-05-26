@@ -1,4 +1,4 @@
-from .dev import *  # noqa: F403
+from .dev import *  # noqa: F401,F403
 
 # Keep tests self-contained and independent from external Redis/Valkey.
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
@@ -8,5 +8,7 @@ CACHES = {
         "LOCATION": "dealhost-tests",
     },
 }
-DEALHOST_API_TOKENS = ("test-token",)
-DEALHOST_ADMIN_API_TOKENS = ("test-admin-token",)
+DEALHOST_API_TOKENS = ("test-token",)  # nosec B105 - test fixture token only.
+DEALHOST_ADMIN_API_TOKENS = (
+    "test-admin-token",  # nosec B105 - test fixture token only.
+)

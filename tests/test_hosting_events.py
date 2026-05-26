@@ -423,13 +423,16 @@ class HostingEventPublishingTests(SimpleTestCase):
 
     @patch("apps.hosting.views.auto_discover_tools_and_applications")
     def test_api_autodiscover_view_returns_report_dict(self, autodiscover):
-        autodiscover.return_value = SimpleNamespace(to_dict=lambda: {"ok": True})
+        autodiscover.return_value = SimpleNamespace(
+            errors=[],
+            to_dict=lambda **kwargs: {"ok": kwargs},
+        )
         view = AutoDiscoverView()
 
         response = view.post(SimpleNamespace())
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data, {"ok": True})
+        self.assertEqual(response.data, {"ok": {"include_errors": False}})
 
     @patch("apps.hosting.views.redirect")
     @patch("apps.hosting.views.messages.error")

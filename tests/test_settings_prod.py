@@ -17,12 +17,12 @@ def _reload_prod_settings():
 class ProductionSettingsTests(SimpleTestCase):
     def test_prod_settings_require_explicit_secure_values(self):
         env = {
-            "DJANGO_SECRET_KEY": "prod-secret-key",
+            "DJANGO_SECRET_KEY": "prod-secret-key",  # nosec B105 - test fixture.
             "DJANGO_ALLOWED_HOSTS": "dealhost.example.com,api.dealhost.example.com",
-            "GITHUB_TOKEN": "github-token",
-            "GITHUB_WEBHOOK_SECRET": "github-webhook-secret",
-            "APISIX_ADMIN_KEY": "apisix-admin-key",
-            "DEALHOST_API_TOKENS": "service-token",
+            "GITHUB_TOKEN": "github-token",  # nosec B105 - test fixture.
+            "GITHUB_WEBHOOK_SECRET": "github-webhook-secret",  # nosec B105 - test fixture.
+            "APISIX_ADMIN_KEY": "apisix-admin-key",  # nosec B105 - test fixture.
+            "DEALHOST_API_TOKENS": "service-token",  # nosec B105 - test fixture.
             "DEALHOST_ADMIN_API_TOKENS": "",
         }
 
@@ -46,7 +46,7 @@ class ProductionSettingsTests(SimpleTestCase):
 
     def test_prod_settings_reject_wildcard_allowed_hosts(self):
         env = {
-            "DJANGO_SECRET_KEY": "prod-secret-key",
+            "DJANGO_SECRET_KEY": "prod-secret-key",  # nosec B105 - test fixture.
             "DJANGO_ALLOWED_HOSTS": "*",
         }
 
@@ -55,11 +55,11 @@ class ProductionSettingsTests(SimpleTestCase):
 
     def test_prod_settings_require_at_least_one_api_token(self):
         env = {
-            "DJANGO_SECRET_KEY": "prod-secret-key",
+            "DJANGO_SECRET_KEY": "prod-secret-key",  # nosec B105 - test fixture.
             "DJANGO_ALLOWED_HOSTS": "dealhost.example.com",
-            "GITHUB_TOKEN": "github-token",
-            "GITHUB_WEBHOOK_SECRET": "github-webhook-secret",
-            "APISIX_ADMIN_KEY": "apisix-admin-key",
+            "GITHUB_TOKEN": "github-token",  # nosec B105 - test fixture.
+            "GITHUB_WEBHOOK_SECRET": "github-webhook-secret",  # nosec B105 - test fixture.
+            "APISIX_ADMIN_KEY": "apisix-admin-key",  # nosec B105 - test fixture.
             "DEALHOST_API_TOKENS": "",
             "DEALHOST_ADMIN_API_TOKENS": "",
         }
