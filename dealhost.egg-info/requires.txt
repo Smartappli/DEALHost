@@ -1,0 +1,9 @@
+Django<6.1,>=6.0.4
+djangorestframework<4.0,>=3.16
+httpx<0.29,>=0.28.1
+python-dotenv<2.0,>=1.2.2
+granian<3.0,>=2.7.3
+servestatic<5.0,>=4.0
+argon2-cffi<26.0,>=25.1
+redis<7.5,>=7.4
+nats-py<3.0,>=2.14.0
