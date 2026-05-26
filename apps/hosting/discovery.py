@@ -44,6 +44,9 @@ class DiscoveryReport:
 
     def to_dict(self, *, include_errors: bool = True) -> dict[str, object]:
         # Raw diagnostics are kept in internal_errors and must not be serialized.
+        errors = self.errors or []
+        if not include_errors and self.internal_errors:
+            errors = [public_autodiscovery_error()]
         return {
             "modules_created": self.modules_created,
             "modules_updated": self.modules_updated,
@@ -54,7 +57,7 @@ class DiscoveryReport:
             "tool_versions_created": self.tool_versions_created,
             "application_versions_created": self.application_versions_created,
             "rolled_back": self.rolled_back,
-            "errors": self.errors or [],
+            "errors": errors,
         }
 
 
