@@ -9,6 +9,9 @@ on:
     paths:
       - "infra/apisix/**"
 
+permissions:
+  contents: read
+
 jobs:
   validate-routes:
     runs-on: ubuntu-latest

@@ -16,6 +16,9 @@ on:
       - "scripts/validate_hosting_manifests.py"
       - ".github/workflows/hosting-manifests-validate.yml"
 
+permissions:
+  contents: read
+
 jobs:
   validate-hosting-manifests:
     runs-on: ubuntu-latest
