@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -10,6 +11,8 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from .models import HostedApplication, Module, Tool
+
+logger = logging.getLogger(__name__)
 
 SEMVER_PATTERN = r"^v?\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$"
 
@@ -29,23 +32,19 @@ class DiscoveryReport:
     tool_versions_created: int = 0
     application_versions_created: int = 0
     rolled_back: bool = False
+    error_count: int = 0
     errors: list[str] | None = None
-    internal_errors: list[str] | None = None
 
-    def add_error(self, error: object) -> None:
-        if self.internal_errors is None:
-            self.internal_errors = []
-        self.internal_errors.append(str(error))
-
+    def add_error(self) -> None:
+        self.error_count += 1
         if self.errors is None:
             self.errors = []
         if not self.errors:
             self.errors.append(public_autodiscovery_error())
 
     def to_dict(self, *, include_errors: bool = True) -> dict[str, object]:
-        # Raw diagnostics are kept in internal_errors and must not be serialized.
         errors = self.errors or []
-        if not include_errors and self.internal_errors:
+        if not include_errors and errors:
             errors = [public_autodiscovery_error()]
         return {
             "modules_created": self.modules_created,
@@ -164,7 +163,12 @@ def auto_discover_tools_and_applications(
             else:
                 report.modules_updated += 1
         except (TypeError, ValueError) as exc:
-            report.add_error(exc)
+            report.add_error()
+            logger.warning(
+                "Hosting autodiscovery rejected module manifest %s with %s",
+                file_path,
+                type(exc).__name__,
+            )
 
     for file_path in sorted((base / "tools").glob("*.json")):
         try:
@@ -200,12 +204,20 @@ def auto_discover_tools_and_applications(
             else:
                 report.tools_updated += 1
             if missing:
-                report.add_error(
-                    _("%(path)s: unknown module slugs: %(slugs)s")
-                    % {"path": file_path, "slugs": ", ".join(missing)},
+                report.add_error()
+                logger.warning(
+                    "Hosting autodiscovery found unknown module slug references "
+                    "in tool manifest %s",
+                    file_path,
+                    extra={"missing_module_slugs": missing},
                 )
         except ValueError as exc:
-            report.add_error(exc)
+            report.add_error()
+            logger.warning(
+                "Hosting autodiscovery rejected tool manifest %s with %s",
+                file_path,
+                type(exc).__name__,
+            )
 
     for file_path in sorted((base / "applications").glob("*.json")):
         try:
@@ -241,12 +253,20 @@ def auto_discover_tools_and_applications(
             else:
                 report.applications_updated += 1
             if missing:
-                report.add_error(
-                    _("%(path)s: unknown module slugs: %(slugs)s")
-                    % {"path": file_path, "slugs": ", ".join(missing)},
+                report.add_error()
+                logger.warning(
+                    "Hosting autodiscovery found unknown module slug references "
+                    "in application manifest %s",
+                    file_path,
+                    extra={"missing_module_slugs": missing},
                 )
         except ValueError as exc:
-            report.add_error(exc)
+            report.add_error()
+            logger.warning(
+                "Hosting autodiscovery rejected application manifest %s with %s",
+                file_path,
+                type(exc).__name__,
+            )
 
     if report.errors:
         report.rolled_back = True

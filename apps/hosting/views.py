@@ -54,6 +54,13 @@ def _query_bool(value: str) -> bool:
     return value.strip().casefold() in {"1", "true", "yes", "on"}
 
 
+def _report_error_count(report: object) -> int:
+    error_count = getattr(report, "error_count", None)
+    if isinstance(error_count, int):
+        return error_count
+    return len(getattr(report, "errors", None) or [])
+
+
 class ModuleViewSet(viewsets.ModelViewSet):
     queryset = Module.objects.all().order_by("name")
     serializer_class = ModuleSerializer
@@ -374,11 +381,9 @@ class AutoDiscoverView(APIView):
     def post(self, request: Request) -> Response:
         report = auto_discover_tools_and_applications()
         if report.errors:
-            internal_errors = getattr(report, "internal_errors", None) or report.errors
             logger.warning(
                 "Hosting autodiscovery failed with %d error(s)",
-                len(internal_errors),
-                extra={"autodiscovery_errors": internal_errors},
+                _report_error_count(report),
             )
         return Response(
             report.to_dict(include_errors=False),
@@ -419,11 +424,9 @@ class ManagementAutoDiscoverView(StaffRequiredMixin, View):
         manifests_dir = Path("manifests")
         report = auto_discover_tools_and_applications(manifests_dir=manifests_dir)
         if report.errors:
-            internal_errors = getattr(report, "internal_errors", None) or report.errors
             logger.warning(
                 "Hosting management autodiscovery failed with %d error(s)",
-                len(internal_errors),
-                extra={"autodiscovery_errors": internal_errors},
+                _report_error_count(report),
             )
             messages.error(request, _("Autodiscovery failed; no changes were applied."))
             messages.error(request, public_autodiscovery_error())

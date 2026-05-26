@@ -123,6 +123,7 @@ class HostingDiscoveryTests(TestCase):
         self.assertEqual(report.tool_versions_created, 0)
         self.assertTrue(report.rolled_back)
         self.assertTrue(report.errors)
+        self.assertEqual(report.error_count, 1)
         self.assertFalse(Tool.objects.filter(slug="broken-tool").exists())
 
     def test_autodiscover_rejects_invalid_version(self):
@@ -145,6 +146,5 @@ class HostingDiscoveryTests(TestCase):
         self.assertEqual(report.applications_created, 0)
         self.assertTrue(report.rolled_back)
         self.assertEqual(report.errors, [public_autodiscovery_error()])
-        self.assertTrue(report.internal_errors)
-        self.assertIn("invalid version", report.internal_errors[0])
+        self.assertEqual(report.error_count, 1)
         self.assertFalse(HostedApplication.objects.filter(slug="bad-version").exists())

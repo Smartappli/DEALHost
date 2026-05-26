@@ -455,7 +455,7 @@ class HostingEventPublishingTests(SimpleTestCase):
             tool_versions_created=5,
             application_versions_created=6,
             errors=["manifest parse error"],
-            internal_errors=["manifest parse error"],
+            error_count=1,
         )
         autodiscover.return_value = report
         redirect_mock.return_value = "redirected"
