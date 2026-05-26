@@ -32,7 +32,7 @@ from apps.common.events.subjects import (
     HOSTING_TOOL_VERSION_RELEASED,
 )
 
-from .discovery import auto_discover_tools_and_applications
+from .discovery import auto_discover_tools_and_applications, public_autodiscovery_error
 from .models import Dataset, HostedApplication, Module, Tool
 from .serializers import (
     ApplicationVersionSerializer,
@@ -371,10 +371,11 @@ class AutoDiscoverView(APIView):
     def post(self, request: Request) -> Response:
         report = auto_discover_tools_and_applications()
         if report.errors:
+            internal_errors = getattr(report, "internal_errors", None) or report.errors
             logger.warning(
                 "Hosting autodiscovery failed with %d error(s)",
-                len(report.errors),
-                extra={"autodiscovery_errors": report.errors},
+                len(internal_errors),
+                extra={"autodiscovery_errors": internal_errors},
             )
         return Response(
             report.to_dict(include_errors=False),
@@ -415,9 +416,14 @@ class ManagementAutoDiscoverView(StaffRequiredMixin, View):
         manifests_dir = Path("manifests")
         report = auto_discover_tools_and_applications(manifests_dir=manifests_dir)
         if report.errors:
+            internal_errors = getattr(report, "internal_errors", None) or report.errors
+            logger.warning(
+                "Hosting management autodiscovery failed with %d error(s)",
+                len(internal_errors),
+                extra={"autodiscovery_errors": internal_errors},
+            )
             messages.error(request, _("Autodiscovery failed; no changes were applied."))
-            for error in report.errors:
-                messages.error(request, error)
+            messages.error(request, public_autodiscovery_error())
         else:
             messages.success(
                 request,

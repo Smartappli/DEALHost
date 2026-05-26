@@ -14,6 +14,10 @@ from .models import HostedApplication, Module, Tool
 SEMVER_PATTERN = r"^v?\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$"
 
 
+def public_autodiscovery_error() -> str:
+    return _("Autodiscovery failed; details are available in server logs.")
+
+
 @dataclass(slots=True)
 class DiscoveryReport:
     modules_created: int = 0
@@ -26,14 +30,19 @@ class DiscoveryReport:
     application_versions_created: int = 0
     rolled_back: bool = False
     errors: list[str] | None = None
+    internal_errors: list[str] | None = None
+
+    def add_error(self, error: object) -> None:
+        if self.internal_errors is None:
+            self.internal_errors = []
+        self.internal_errors.append(str(error))
+
+        if self.errors is None:
+            self.errors = []
+        if not self.errors:
+            self.errors.append(public_autodiscovery_error())
 
     def to_dict(self, *, include_errors: bool = True) -> dict[str, object]:
-        errors = self.errors or []
-        public_errors = errors
-        if not include_errors and errors:
-            public_errors = [
-                _("Autodiscovery failed; details are available in server logs."),
-            ]
         return {
             "modules_created": self.modules_created,
             "modules_updated": self.modules_updated,
@@ -44,7 +53,7 @@ class DiscoveryReport:
             "tool_versions_created": self.tool_versions_created,
             "application_versions_created": self.application_versions_created,
             "rolled_back": self.rolled_back,
-            "errors": public_errors,
+            "errors": self.errors or [],
         }
 
 
@@ -151,7 +160,7 @@ def auto_discover_tools_and_applications(
             else:
                 report.modules_updated += 1
         except (TypeError, ValueError) as exc:
-            report.errors.append(str(exc))
+            report.add_error(exc)
 
     for file_path in sorted((base / "tools").glob("*.json")):
         try:
@@ -187,12 +196,12 @@ def auto_discover_tools_and_applications(
             else:
                 report.tools_updated += 1
             if missing:
-                report.errors.append(
+                report.add_error(
                     _("%(path)s: unknown module slugs: %(slugs)s")
                     % {"path": file_path, "slugs": ", ".join(missing)},
                 )
         except ValueError as exc:
-            report.errors.append(str(exc))
+            report.add_error(exc)
 
     for file_path in sorted((base / "applications").glob("*.json")):
         try:
@@ -228,12 +237,12 @@ def auto_discover_tools_and_applications(
             else:
                 report.applications_updated += 1
             if missing:
-                report.errors.append(
+                report.add_error(
                     _("%(path)s: unknown module slugs: %(slugs)s")
                     % {"path": file_path, "slugs": ", ".join(missing)},
                 )
         except ValueError as exc:
-            report.errors.append(str(exc))
+            report.add_error(exc)
 
     if report.errors:
         report.rolled_back = True
