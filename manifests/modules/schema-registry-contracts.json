@@ -1,7 +1,7 @@
 {
   "name": "DEALIoT Schema Registry Contracts",
   "slug": "schema-registry-contracts",
-  "image": "apicurio/apicurio-registry:3.2.5",
+  "image": "apicurio/apicurio-registry:3.3.0",
   "branch": "main",
   "repository_owner": "Smartappli",
   "repository_name": "DEALIoT",
