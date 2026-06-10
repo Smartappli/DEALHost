@@ -61,6 +61,6 @@ jobs:
           CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
 
       - name: SonarCloud Scan
-        uses: SonarSource/sonarqube-scan-action@7006c4492b2e0ee0f816d36501671557c97f5995
+        uses: SonarSource/sonarqube-scan-action@713881670b6b3676cda39549040e2d88c70d582e
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} # nosemgrep: GitHub secret reference, not a literal token.
