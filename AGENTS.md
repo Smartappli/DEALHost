@@ -81,6 +81,7 @@ For SDK changes:
 python -m unittest discover -s sdk/python/tests -v
 Push-Location sdk/go/dealhost-sdk; go test ./...; Pop-Location
 Push-Location sdk/rust/dealhost-sdk; cargo test; Pop-Location
+Push-Location sdk/java/dealhost-sdk; mvn --batch-mode test; Pop-Location
 ```
 
 ## Django and API guidance

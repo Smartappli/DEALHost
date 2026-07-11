@@ -69,7 +69,7 @@ Upstream modules (containers/services Django)
 - `POST /api/gateway/github/sync/` : récupère le dernier commit d’une branche, avec `repository_full_name` optionnel pour cibler `Smartappli/DEALIoT` ou `Smartappli/DEALData`.
 - `GET /api/gateway/github/repositories/` : liste les repositories intégrés, leurs événements autorisés, modules mappés et routes publiques déclarées.
 - `POST /api/gateway/apisix/publish/` : crée/met à jour une route APISIX, avec `dry_run=true` pour prévisualiser le payload sans appel admin APISIX.
-- `POST /api/gateway/github/webhook/` : webhook signé GitHub -> publication de route.
+- `POST /api/gateway/github/webhook/` : webhook signé GitHub -> publication de route. Les en-têtes `X-Hub-Signature-256`, `X-GitHub-Event` et `X-GitHub-Delivery` sont requis ; une livraison est traitée au plus une fois pendant 24 h.
 - `GET/POST /api/hosting/modules/` : CRUD des modules hébergés.
 - `GET/POST /api/hosting/tools/` : CRUD des outils (chaque outil peut lier plusieurs modules).
 - `GET/POST /api/hosting/applications/` : CRUD des applications hébergées (chaque application peut lier plusieurs modules).
@@ -294,6 +294,7 @@ System.out.println(response);
 - Définir `DEALHOST_API_TOKENS` pour les clients API en lecture et `DEALHOST_ADMIN_API_TOKENS` pour les opérations d'administration (IAM, publication APISIX, autodiscovery, création/mise à jour hosting).
 - Restreindre l'exposition réseau et exposer uniquement APISIX en edge.
 - Protéger le webhook GitHub avec `GITHUB_WEBHOOK_SECRET`.
+- Configurer GitHub pour transmettre `X-GitHub-Delivery` : DEALHost déduplique les livraisons signées pendant 24 h afin d'éviter les publications de route rejouées.
 - Restreindre les webhooks acceptés avec `GITHUB_ALLOWED_REPOSITORIES` (défaut: `Smartappli/DEALIoT,Smartappli/DEALData`).
 - Externaliser SQLite vers PostgreSQL en environnement de production.
 - Sessions en backend `cached_db` (persistance DB + cache Valkey pour performance).

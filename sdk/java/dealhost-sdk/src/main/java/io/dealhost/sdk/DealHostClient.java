@@ -25,28 +25,40 @@ public class DealHostClient {
 
     public String createTool(String name, String slug, String description, List<Integer> moduleIds, boolean enabled)
             throws IOException, InterruptedException {
-        String json = String.format(
-                "{\"name\":\"%s\",\"slug\":\"%s\",\"description\":\"%s\",\"module_ids\":%s,\"enabled\":%s}",
-                escape(name),
-                escape(slug),
-                escape(description),
-                moduleIds.toString(),
-                enabled
+        return request(
+                "POST",
+                "/api/hosting/tools/",
+                hostingPayload(name, slug, description, moduleIds, enabled),
+                null
         );
-        return request("POST", "/api/hosting/tools/", json, null);
     }
 
     public String createApplication(String name, String slug, String description, List<Integer> moduleIds, boolean enabled)
             throws IOException, InterruptedException {
+        return request(
+                "POST",
+                "/api/hosting/applications/",
+                hostingPayload(name, slug, description, moduleIds, enabled),
+                null
+        );
+    }
+
+    static String hostingPayload(
+            String name,
+            String slug,
+            String description,
+            List<Integer> moduleIds,
+            boolean enabled
+    ) {
         String json = String.format(
                 "{\"name\":\"%s\",\"slug\":\"%s\",\"description\":\"%s\",\"module_ids\":%s,\"enabled\":%s}",
-                escape(name),
-                escape(slug),
-                escape(description),
-                moduleIds.toString(),
+                escapeJsonString(name),
+                escapeJsonString(slug),
+                escapeJsonString(description),
+                moduleIds == null ? "[]" : moduleIds.toString(),
                 enabled
         );
-        return request("POST", "/api/hosting/applications/", json, null);
+        return json;
     }
 
     public String listTools(Boolean enabled, String moduleSlug) throws IOException, InterruptedException {
@@ -104,7 +116,40 @@ public class DealHostClient {
         return baseUrl + path + "?" + q;
     }
 
-    private String escape(String value) {
-        return value.replace("\\", "\\\\").replace("\"", "\\\"");
+    private static String escapeJsonString(String value) {
+        StringBuilder escaped = new StringBuilder(value.length());
+        for (int index = 0; index < value.length(); index++) {
+            char character = value.charAt(index);
+            switch (character) {
+                case '\\':
+                    escaped.append("\\\\");
+                    break;
+                case '"':
+                    escaped.append("\\\"");
+                    break;
+                case '\b':
+                    escaped.append("\\b");
+                    break;
+                case '\f':
+                    escaped.append("\\f");
+                    break;
+                case '\n':
+                    escaped.append("\\n");
+                    break;
+                case '\r':
+                    escaped.append("\\r");
+                    break;
+                case '\t':
+                    escaped.append("\\t");
+                    break;
+                default:
+                    if (character < 0x20) {
+                        escaped.append(String.format("\\u%04x", (int) character));
+                    } else {
+                        escaped.append(character);
+                    }
+            }
+        }
+        return escaped.toString();
     }
 }

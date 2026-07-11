@@ -1,3 +1,6 @@
+import hashlib
+
+from django.core.cache import cache
 from django.utils.translation import gettext as _
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
@@ -14,6 +17,8 @@ from apps.common.events.subjects import (
 
 from .services import ApisixService, GitHubService, normalize_module_slug
 
+GITHUB_WEBHOOK_DELIVERY_TTL = 24 * 60 * 60
+
 
 def _is_truthy(value):
     if isinstance(value, bool):
@@ -21,6 +26,11 @@ def _is_truthy(value):
     if value is None:
         return False
     return str(value).strip().casefold() in {"1", "true", "yes", "on"}
+
+
+def _github_delivery_cache_key(delivery_id: str) -> str:
+    digest = hashlib.sha256(delivery_id.encode("utf-8")).hexdigest()
+    return f"gateway:github-webhook:{digest}"
 
 
 class HealthView(APIView):
@@ -134,7 +144,6 @@ class GitHubWebhookView(APIView):
         raw_payload = request.body
         signature = request.headers.get("X-Hub-Signature-256")
         github = GitHubService()
-        payload = request.data if isinstance(request.data, dict) else {}
 
         if not github.verify_signature(raw_payload, signature):
             return Response(
@@ -142,8 +151,21 @@ class GitHubWebhookView(APIView):
                 status=status.HTTP_401_UNAUTHORIZED,
             )
 
+        payload = request.data if isinstance(request.data, dict) else {}
+        delivery_id = request.headers.get("X-GitHub-Delivery", "").strip()
+        if not delivery_id:
+            return Response(
+                {"detail": _("Missing GitHub delivery id.")},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         repository = github.repository_full_name(payload)
-        event = request.headers.get("X-GitHub-Event", "unknown")
+        event = request.headers.get("X-GitHub-Event", "").strip()
+        if not event:
+            return Response(
+                {"detail": _("Missing GitHub event.")},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         expected_repository = github.expected_repository_full_name()
         allowed_repositories = github.allowed_repository_full_names()
         if not github.is_expected_repository(payload):
@@ -171,6 +193,28 @@ class GitHubWebhookView(APIView):
                 status=status.HTTP_202_ACCEPTED,
             )
 
+        cache_key = _github_delivery_cache_key(delivery_id)
+        if not cache.add(cache_key, True, timeout=GITHUB_WEBHOOK_DELIVERY_TTL):
+            return Response(
+                {
+                    "ignored": True,
+                    "detail": _("GitHub webhook delivery was already processed."),
+                },
+                status=status.HTTP_202_ACCEPTED,
+            )
+
+        try:
+            return self._process_webhook(
+                github=github,
+                payload=payload,
+                event=event,
+                repository=repository,
+            )
+        except Exception:
+            cache.delete(cache_key)
+            raise
+
+    def _process_webhook(self, *, github, payload, event: str, repository: str):
         module_slugs = github.module_slugs_for_webhook(payload)
         publish_event(
             event_type=GATEWAY_GITHUB_WEBHOOK_RECEIVED,

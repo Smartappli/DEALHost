@@ -1,7 +1,12 @@
+import hashlib
+import hmac
+import json
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
-from django.test import SimpleTestCase
+from django.core.cache import cache
+from django.test import SimpleTestCase, override_settings
+from django.urls import reverse
 from rest_framework.test import APIRequestFactory, force_authenticate
 
 from apps.gateway.views import (
@@ -9,6 +14,15 @@ from apps.gateway.views import (
     GitHubWebhookView,
     PublishRouteView,
     SyncGitHubView,
+)
+from dealhost.settings.env import GitHubConfig
+
+TEST_GITHUB_CONFIG = GitHubConfig(
+    owner="Smartappli",
+    repository="DEALIoT",
+    token="test-token",  # nosec B106 - test fixture token only.
+    webhook_secret="test-webhook-secret",  # nosec B106 - test fixture secret.
+    allowed_repositories=("Smartappli/DEALIoT",),
 )
 
 
@@ -147,6 +161,7 @@ class GatewayEventPublishingTests(SimpleTestCase):
             format="json",
             HTTP_X_HUB_SIGNATURE_256="sha256=ok",
             HTTP_X_GITHUB_EVENT="push",
+            HTTP_X_GITHUB_DELIVERY="delivery-dealiot-paths",
         )
 
         response = GitHubWebhookView.as_view()(request)
@@ -187,6 +202,7 @@ class GatewayEventPublishingTests(SimpleTestCase):
             format="json",
             HTTP_X_HUB_SIGNATURE_256="sha256=ok",
             HTTP_X_GITHUB_EVENT="pull_request",
+            HTTP_X_GITHUB_DELIVERY="delivery-unsupported-event",
         )
 
         response = GitHubWebhookView.as_view()(request)
@@ -222,6 +238,7 @@ class GatewayEventPublishingTests(SimpleTestCase):
             format="json",
             HTTP_X_HUB_SIGNATURE_256="sha256=ok",
             HTTP_X_GITHUB_EVENT="push",
+            HTTP_X_GITHUB_DELIVERY="delivery-unexpected-repository",
         )
 
         response = GitHubWebhookView.as_view()(request)
@@ -230,3 +247,136 @@ class GatewayEventPublishingTests(SimpleTestCase):
         self.assertTrue(response.data["ignored"])
         publish_mock.assert_not_called()
         apisix_service_cls.return_value.publish_route.assert_not_called()
+
+
+@override_settings(GITHUB=TEST_GITHUB_CONFIG)
+class GitHubWebhookSecurityTests(SimpleTestCase):
+    github_config = TEST_GITHUB_CONFIG
+
+    def setUp(self):
+        cache.clear()
+
+    def _signature(self, payload: bytes) -> str:
+        digest = hmac.new(
+            self.github_config.webhook_secret.encode("utf-8"),
+            payload,
+            hashlib.sha256,
+        ).hexdigest()
+        return f"sha256={digest}"
+
+    @patch("apps.gateway.views.publish_event")
+    @patch("apps.gateway.views.ApisixService")
+    def test_webhook_ignores_a_replayed_delivery(
+        self,
+        apisix_service_cls,
+        publish_mock,
+    ):
+        payload = json.dumps(
+            {
+                "repository": {"full_name": "Smartappli/DEALIoT"},
+                "commits": [{"modified": ["mqtt-kafka-bridge/bridge.py"]}],
+            },
+        ).encode("utf-8")
+        apisix_service_cls.return_value.publish_route.return_value = {"route_id": "r-1"}
+        headers = {
+            "HTTP_X_HUB_SIGNATURE_256": self._signature(payload),
+            "HTTP_X_GITHUB_EVENT": "push",
+            "HTTP_X_GITHUB_DELIVERY": "delivery-replay-test",
+        }
+
+        first = self.client.post(
+            reverse("github-webhook"),
+            data=payload,
+            content_type="application/json",
+            **headers,
+        )
+        second = self.client.post(
+            reverse("github-webhook"),
+            data=payload,
+            content_type="application/json",
+            **headers,
+        )
+
+        self.assertEqual(first.status_code, 202)
+        self.assertEqual(second.status_code, 202)
+        self.assertTrue(second.data["ignored"])
+        apisix_service_cls.return_value.publish_route.assert_called_once_with(
+            "mqtt-kafka-bridge",
+            dry_run=False,
+        )
+        self.assertEqual(publish_mock.call_count, 3)
+
+    def test_webhook_validates_signature_before_parsing_json(self):
+        response = self.client.post(
+            reverse("github-webhook"),
+            data=b"{not-json",
+            content_type="application/json",
+            HTTP_X_HUB_SIGNATURE_256="sha256=invalid",
+        )
+
+        self.assertEqual(response.status_code, 401)
+
+    def test_webhook_requires_a_delivery_id(self):
+        payload = b"{}"
+        response = self.client.post(
+            reverse("github-webhook"),
+            data=payload,
+            content_type="application/json",
+            HTTP_X_HUB_SIGNATURE_256=self._signature(payload),
+            HTTP_X_GITHUB_EVENT="push",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+    def test_webhook_requires_an_event(self):
+        payload = b"{}"
+        response = self.client.post(
+            reverse("github-webhook"),
+            data=payload,
+            content_type="application/json",
+            HTTP_X_HUB_SIGNATURE_256=self._signature(payload),
+            HTTP_X_GITHUB_DELIVERY="delivery-missing-event",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+    @patch("apps.gateway.views.publish_event")
+    @patch("apps.gateway.views.ApisixService")
+    def test_webhook_allows_retry_after_processing_failure(
+        self,
+        apisix_service_cls,
+        publish_mock,
+    ):
+        payload = json.dumps(
+            {
+                "repository": {"full_name": "Smartappli/DEALIoT"},
+                "commits": [{"modified": ["mqtt-kafka-bridge/bridge.py"]}],
+            },
+        ).encode("utf-8")
+        apisix_service_cls.return_value.publish_route.side_effect = [
+            RuntimeError("APISIX unavailable"),
+            {"route_id": "r-1"},
+        ]
+        headers = {
+            "HTTP_X_HUB_SIGNATURE_256": self._signature(payload),
+            "HTTP_X_GITHUB_EVENT": "push",
+            "HTTP_X_GITHUB_DELIVERY": "delivery-retry-test",
+        }
+
+        with self.assertRaisesRegex(RuntimeError, "APISIX unavailable"):
+            self.client.post(
+                reverse("github-webhook"),
+                data=payload,
+                content_type="application/json",
+                **headers,
+            )
+        retry = self.client.post(
+            reverse("github-webhook"),
+            data=payload,
+            content_type="application/json",
+            **headers,
+        )
+
+        self.assertEqual(retry.status_code, 202)
+        self.assertEqual(apisix_service_cls.return_value.publish_route.call_count, 2)
+        self.assertEqual(publish_mock.call_count, 6)
