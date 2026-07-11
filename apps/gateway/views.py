@@ -45,6 +45,12 @@ class SyncGitHubView(APIView):
 
     def post(self, request):
         branch = request.data.get("branch", "main")
+        if not isinstance(branch, str) or not branch.strip():
+            return Response(
+                {"detail": _("branch must be a non-empty string.")},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        branch = branch.strip()
         repository = request.data.get("repository_full_name")
         repository_payload = request.data.get("repository")
         if not repository and isinstance(repository_payload, dict):

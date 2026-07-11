@@ -102,6 +102,21 @@ class GatewayEventPublishingTests(SimpleTestCase):
             repository_full_name="Smartappli/DEALData",
         )
 
+    @patch("apps.gateway.views.GitHubService")
+    def test_sync_github_rejects_a_non_string_branch(self, github_service_cls):
+        request = self.factory.post(
+            "/api/gateway/github/sync/",
+            {"branch": {"name": "main"}},
+            format="json",
+        )
+        force_authenticate(request, user=self.user)
+
+        response = SyncGitHubView.as_view()(request)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data["detail"], "branch must be a non-empty string.")
+        github_service_cls.assert_not_called()
+
     def test_github_repositories_lists_manifest_integrations(self):
         request = self.factory.get("/api/gateway/github/repositories/")
         force_authenticate(request, user=self.user)
