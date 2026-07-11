@@ -6,6 +6,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
+from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 from django.utils.translation import gettext as _
@@ -65,6 +66,9 @@ def _read_manifest(
     required_fields: tuple[str, ...] = ("name", "slug"),
 ) -> dict[str, object]:
     data = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        msg = _("%(path)s: manifest root must be a JSON object") % {"path": path}
+        raise ValueError(msg)
     for field in required_fields:
         if not data.get(field):
             msg = _("%(path)s: missing required field '%(field)s'") % {
@@ -127,7 +131,7 @@ def _extract_modules(payload: dict[str, object]) -> tuple[list[Module], list[str
 def auto_discover_tools_and_applications(
     manifests_dir: Path | None = None,
 ) -> DiscoveryReport:
-    base = manifests_dir or Path("manifests")
+    base = manifests_dir or Path(settings.BASE_DIR) / "manifests"
     report = DiscoveryReport(errors=[])
 
     for file_path in sorted((base / "modules").glob("*.json")):

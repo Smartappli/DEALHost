@@ -266,7 +266,10 @@ class GitHubService:
                 slug = str(mapping.get("module_slug", ""))
                 if not prefix or not slug:
                     continue
-                if normalized == prefix.rstrip("/") or normalized.startswith(prefix):
+                normalized_prefix = prefix.strip("/")
+                if normalized == normalized_prefix or normalized.startswith(
+                    f"{normalized_prefix}/",
+                ):
                     return slug
         return None
 

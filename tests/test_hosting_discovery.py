@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from apps.hosting.discovery import (
     auto_discover_tools_and_applications,
@@ -148,3 +148,41 @@ class HostingDiscoveryTests(TestCase):
         self.assertEqual(report.errors, [public_autodiscovery_error()])
         self.assertEqual(report.error_count, 1)
         self.assertFalse(HostedApplication.objects.filter(slug="bad-version").exists())
+
+    def test_autodiscover_rejects_a_non_object_json_manifest(self):
+        with TemporaryDirectory() as tmpdir:
+            base = Path(tmpdir)
+            (base / "modules").mkdir(parents=True)
+            (base / "modules" / "invalid.json").write_text(
+                json.dumps(["not", "an", "object"]),
+                encoding="utf-8",
+            )
+
+            report = auto_discover_tools_and_applications(manifests_dir=base)
+
+        self.assertTrue(report.rolled_back)
+        self.assertEqual(report.errors, [public_autodiscovery_error()])
+        self.assertEqual(report.error_count, 1)
+
+    def test_autodiscover_uses_the_configured_project_directory(self):
+        with TemporaryDirectory() as tmpdir:
+            base = Path(tmpdir)
+            manifests = base / "manifests"
+            (manifests / "modules").mkdir(parents=True)
+            (manifests / "modules" / "configured-path.json").write_text(
+                json.dumps(
+                    {
+                        "name": "Configured Path",
+                        "slug": "configured-path",
+                        "image": "example/configured-path:1.0.0",
+                    },
+                ),
+                encoding="utf-8",
+            )
+
+            with override_settings(BASE_DIR=base):
+                report = auto_discover_tools_and_applications()
+
+        self.assertEqual(report.modules_created, 1)
+        self.assertEqual(report.errors, [])
+        self.assertTrue(Module.objects.filter(slug="configured-path").exists())

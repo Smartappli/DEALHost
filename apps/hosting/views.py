@@ -1,8 +1,8 @@
 import logging
-from pathlib import Path
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.conf import settings
 from django.db.models import Q
 from django.shortcuts import redirect
 from django.utils import timezone
@@ -421,7 +421,7 @@ class StaffRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
 
 class ManagementAutoDiscoverView(StaffRequiredMixin, View):
     def post(self, request, *args, **kwargs):
-        manifests_dir = Path("manifests")
+        manifests_dir = Path(settings.BASE_DIR) / "manifests"
         report = auto_discover_tools_and_applications(manifests_dir=manifests_dir)
         if report.errors:
             logger.warning(

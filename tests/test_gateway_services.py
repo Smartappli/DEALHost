@@ -150,6 +150,30 @@ class GitHubServiceTests(SimpleTestCase):
             },
         )
 
+    def test_module_slug_for_path_requires_a_path_segment_boundary(self):
+        service = GitHubService()
+        manifest = {
+            "path_mappings": [
+                {"prefix": "services/api", "module_slug": "api-module"},
+            ],
+        }
+        service.repository_manifests = [manifest]
+        service.repository_manifest_map = {"example/repository": manifest}
+
+        self.assertEqual(
+            service.module_slug_for_path(
+                "services/api/views.py",
+                repository="example/repository",
+            ),
+            "api-module",
+        )
+        self.assertIsNone(
+            service.module_slug_for_path(
+                "services/api-v2/views.py",
+                repository="example/repository",
+            ),
+        )
+
     def test_explicit_module_slug_is_preserved_for_manual_payloads(self):
         payload = {
             "repository": {"full_name": "Smartappli/DEALIoT"},
