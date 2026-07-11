@@ -82,6 +82,8 @@ python -m unittest discover -s sdk/python/tests -v
 Push-Location sdk/go/dealhost-sdk; go test ./...; Pop-Location
 Push-Location sdk/rust/dealhost-sdk; cargo test; Pop-Location
 Push-Location sdk/java/dealhost-sdk; mvn --batch-mode test; Pop-Location
+Rscript -e "testthat::test_local('sdk/r/dealhostR')"
+julia --project=sdk/julia/DealHostSDK.jl -e "using Pkg; Pkg.instantiate(); Pkg.test()"
 ```
 
 ## Django and API guidance

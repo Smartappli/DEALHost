@@ -6,12 +6,20 @@
 #' @return A client object used by all SDK functions.
 #' @export
 dealhost_client <- function(base_url, token = NULL, timeout_seconds = 30) {
-  if (!is.character(base_url) || length(base_url) != 1 || !nzchar(base_url)) {
+  if (!is.character(base_url) || length(base_url) != 1 || is.na(base_url)) {
     stop("base_url must be a non-empty string.", call. = FALSE)
+  }
+  normalized_base_url <- sub("/+$", "", base_url)
+  if (!nzchar(normalized_base_url)) {
+    stop("base_url must be a non-empty string.", call. = FALSE)
+  }
+  if (!is.numeric(timeout_seconds) || length(timeout_seconds) != 1 ||
+      is.na(timeout_seconds) || timeout_seconds <= 0) {
+    stop("timeout_seconds must be a positive number.", call. = FALSE)
   }
 
   list(
-    base_url = sub("/$", "", base_url),
+    base_url = normalized_base_url,
     token = token,
     timeout_seconds = timeout_seconds
   )

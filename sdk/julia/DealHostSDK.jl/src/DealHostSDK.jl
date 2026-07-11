@@ -11,8 +11,21 @@ struct DealHostClient
     timeout_seconds::Int
 end
 
-DealHostClient(base_url::String; token=nothing, timeout_seconds::Int=30) =
-    DealHostClient(chop(base_url, tail=endswith(base_url, "/") ? 1 : 0), token, timeout_seconds)
+function DealHostClient(
+    base_url::AbstractString;
+    token::Union{Nothing,AbstractString}=nothing,
+    timeout_seconds::Integer=30,
+)
+    normalized_base_url = rstrip(String(base_url), '/')
+    isempty(normalized_base_url) && throw(ArgumentError("base_url must be non-empty."))
+    timeout_seconds > 0 || throw(ArgumentError("timeout_seconds must be positive."))
+
+    return DealHostClient(
+        normalized_base_url,
+        isnothing(token) ? nothing : String(token),
+        Int(timeout_seconds),
+    )
+end
 
 function _request(client::DealHostClient, method::String, path::String; body=nothing, query=Dict{String,String}())
     headers = ["Accept" => "application/json"]
