@@ -42,6 +42,26 @@ class GatewayEventPublishingTests(SimpleTestCase):
             dry_run=False,
         )
 
+    @patch("apps.gateway.views.publish_event")
+    @patch("apps.gateway.views.ApisixService")
+    def test_publish_route_rejects_invalid_module_slug(
+        self,
+        apisix_service_cls,
+        publish_mock,
+    ):
+        request = self.factory.post(
+            "/api/gateway/apisix/publish/",
+            {"module_slug": "../admin"},
+            format="json",
+        )
+        force_authenticate(request, user=self.admin_user)
+
+        response = PublishRouteView.as_view()(request)
+
+        self.assertEqual(response.status_code, 400)
+        apisix_service_cls.assert_not_called()
+        publish_mock.assert_not_called()
+
     @patch("apps.gateway.views.GitHubService")
     def test_sync_github_accepts_repository_full_name(self, github_service_cls):
         github = MagicMock()

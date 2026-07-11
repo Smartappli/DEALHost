@@ -6,6 +6,7 @@ from apps.iam.views import IamManagementInterfaceView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("accounts/", include("django.contrib.auth.urls")),
     path("i18n/", include("django.conf.urls.i18n")),
     path("api/hosting/", include("apps.hosting.urls")),
     path("api/iam/", include("apps.iam.urls")),

@@ -66,7 +66,10 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"], url_path="set-password")
     def set_password(self, request: Request, pk: str | None = None) -> Response:
         user = self.get_object()
-        serializer = PasswordChangeSerializer(data=request.data)
+        serializer = PasswordChangeSerializer(
+            data=request.data,
+            context={"user": user},
+        )
         serializer.is_valid(raise_exception=True)
         user.set_password(serializer.validated_data["password"])
         user.save(update_fields=["password"])

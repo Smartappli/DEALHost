@@ -43,7 +43,7 @@ docker compose up
 Run the relevant checks before opening a pull request.
 
 ```powershell
-python manage.py test tests --verbosity 2
+python manage.py test tests --verbosity 2 --settings=dealhost.settings.test
 python -m compileall dealhost apps tests
 ```
 

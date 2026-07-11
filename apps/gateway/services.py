@@ -10,6 +10,8 @@ from urllib.parse import quote
 
 import httpx
 from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_slug
 
 
 def _deduplicate(values: list[str]) -> list[str]:
@@ -74,6 +76,16 @@ def _route_id_for_module(module_slug: str) -> str:
     if module_slug.startswith("module-"):
         return module_slug
     return f"module-{module_slug}"
+
+
+def normalize_module_slug(value: object) -> str:
+    module_slug = str(value).strip()
+    try:
+        validate_slug(module_slug)
+    except ValidationError as exc:
+        msg = "module_slug must contain only letters, numbers, hyphens or underscores"
+        raise ValueError(msg) from exc
+    return module_slug
 
 
 class GitHubService:
@@ -314,6 +326,7 @@ class ApisixService:
         }
 
     def publish_route(self, module_slug: str, dry_run: bool = False) -> dict:
+        module_slug = normalize_module_slug(module_slug)
         route_id = _route_id_for_module(module_slug)
         public_path = f"/{module_slug}"
         upstream_host = self.config.upstream_host
@@ -324,25 +337,21 @@ class ApisixService:
             upstream_host = str(default_route["upstream_host"])
             upstream_port = int(default_route["upstream_port"])
 
-        try:
-            from apps.hosting.models import Module
+        from apps.hosting.models import Module
 
-            module = Module.objects.filter(slug=module_slug, enabled=True).first()
-            if module is not None:
-                if (
-                    not module.public_path
-                    or not module.upstream_host
-                    or module.upstream_port is None
-                ):
-                    return self._skip_without_public_upstream(route_id, dry_run)
-                public_path = module.public_path or public_path
-                upstream_host = module.upstream_host or upstream_host
-                upstream_port = module.upstream_port or upstream_port
-            elif module_slug in self.known_module_slugs and default_route is None:
+        module = Module.objects.filter(slug=module_slug, enabled=True).first()
+        if module is not None:
+            if (
+                not module.public_path
+                or not module.upstream_host
+                or module.upstream_port is None
+            ):
                 return self._skip_without_public_upstream(route_id, dry_run)
-        except Exception:
-            if module_slug in self.known_module_slugs and default_route is None:
-                return self._skip_without_public_upstream(route_id, dry_run)
+            public_path = module.public_path or public_path
+            upstream_host = module.upstream_host or upstream_host
+            upstream_port = module.upstream_port or upstream_port
+        elif module_slug in self.known_module_slugs and default_route is None:
+            return self._skip_without_public_upstream(route_id, dry_run)
 
         public_path = "/" + public_path.strip("/")
         payload = {
@@ -363,7 +372,8 @@ class ApisixService:
                 "response": None,
             }
 
-        url = f"{self.config.admin_url}/apisix/admin/routes/{route_id}"
+        route_ref = quote(route_id, safe="")
+        url = f"{self.config.admin_url}/apisix/admin/routes/{route_ref}"
         headers = {"X-API-KEY": self.config.admin_key}
         response = httpx.put(url, headers=headers, json=payload, timeout=15)
         response.raise_for_status()

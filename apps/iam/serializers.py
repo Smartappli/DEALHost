@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
+from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
 User = get_user_model()
@@ -73,6 +74,16 @@ class UserCreateSerializer(UserSerializer):
     class Meta(UserSerializer.Meta):
         fields = UserSerializer.Meta.fields + ["password"]
 
+    def validate(self, attrs):
+        candidate = User(
+            username=attrs.get("username", ""),
+            email=attrs.get("email", ""),
+            first_name=attrs.get("first_name", ""),
+            last_name=attrs.get("last_name", ""),
+        )
+        validate_password(attrs["password"], user=candidate)
+        return attrs
+
     def create(self, validated_data):
         groups = validated_data.pop("groups", [])
         user_permissions = validated_data.pop("user_permissions", [])
@@ -87,3 +98,7 @@ class UserCreateSerializer(UserSerializer):
 
 class PasswordChangeSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True, min_length=8)
+
+    def validate_password(self, value: str) -> str:
+        validate_password(value, user=self.context.get("user"))
+        return value

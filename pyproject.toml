@@ -25,7 +25,7 @@ include = ["dealhost*", "apps*"]
 
 [tool.setuptools.package-data]
 "apps.hosting" = ["templates/hosting/*.html"]
-"apps.iam" = ["templates/iam/*.html"]
+"apps.iam" = ["templates/iam/*.html", "templates/registration/*.html"]
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "dealhost.settings.test"

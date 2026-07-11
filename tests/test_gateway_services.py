@@ -196,6 +196,23 @@ class GitHubServiceTests(SimpleTestCase):
 )
 class ApisixServiceTests(TestCase):
     @patch("apps.gateway.services.httpx.put")
+    def test_publish_route_rejects_invalid_module_slug(self, put_mock):
+        with self.assertRaisesRegex(ValueError, "module_slug"):
+            ApisixService().publish_route("../admin")
+
+        put_mock.assert_not_called()
+
+    @patch("apps.gateway.services.httpx.put")
+    @patch("apps.hosting.models.Module.objects.filter")
+    def test_publish_route_does_not_hide_database_errors(self, filter_mock, put_mock):
+        filter_mock.side_effect = RuntimeError("database unavailable")
+
+        with self.assertRaisesRegex(RuntimeError, "database unavailable"):
+            ApisixService().publish_route("module-core")
+
+        put_mock.assert_not_called()
+
+    @patch("apps.gateway.services.httpx.put")
     def test_publish_route_uses_module_routing_metadata(self, put_mock):
         response = Mock()
         response.json.return_value = {"ok": True}

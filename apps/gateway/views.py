@@ -12,7 +12,7 @@ from apps.common.events.subjects import (
     GATEWAY_ROUTE_PUBLISH_REQUESTED,
 )
 
-from .services import ApisixService, GitHubService
+from .services import ApisixService, GitHubService, normalize_module_slug
 
 
 def _is_truthy(value):
@@ -87,7 +87,18 @@ class PublishRouteView(APIView):
                 {"detail": _("module_slug is required.")},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        module_slug = str(module_slug).strip()
+        try:
+            module_slug = normalize_module_slug(module_slug)
+        except ValueError:
+            return Response(
+                {
+                    "detail": _(
+                        "module_slug must contain only letters, numbers, "
+                        "hyphens or underscores.",
+                    ),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         publish_event(
             event_type=GATEWAY_ROUTE_PUBLISH_REQUESTED,

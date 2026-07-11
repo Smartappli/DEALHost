@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 from django.conf import settings
@@ -23,9 +24,16 @@ async def _publish(subject: str, payload: dict[str, Any]) -> None:
 
 
 def publish(subject: str, payload: dict[str, Any]) -> None:
+    if not settings.NATS["ENABLED"]:
+        return
+
     try:
-        asyncio.run(_publish(subject=subject, payload=payload))
+        asyncio.get_running_loop()
     except RuntimeError:
-        # Fallback for environments that already run an event loop.
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(_publish(subject=subject, payload=payload))
+        asyncio.run(_publish(subject=subject, payload=payload))
+        return
+
+    # A synchronous API cannot run another loop in the current thread. Execute
+    # the publish in a short-lived worker and preserve its error semantics.
+    with ThreadPoolExecutor(max_workers=1, thread_name_prefix="dealhost-nats") as pool:
+        pool.submit(asyncio.run, _publish(subject=subject, payload=payload)).result()

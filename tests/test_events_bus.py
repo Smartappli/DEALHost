@@ -84,6 +84,20 @@ class NatsClientEnabledTests(SimpleTestCase):
         self.assertTrue(calls["flushed"])
         self.assertTrue(calls["closed"])
 
+    def test_sync_publish_works_inside_running_event_loop(self):
+        calls = []
+
+        async def fake_publish(*, subject, payload):
+            calls.append((subject, payload))
+
+        async def call_sync_publish():
+            nats_client.publish("dealhost.test", {"ok": True})
+
+        with patch("apps.common.events.nats_client._publish", side_effect=fake_publish):
+            asyncio.run(call_sync_publish())
+
+        self.assertEqual(calls, [("dealhost.test", {"ok": True})])
+
 
 @override_settings(
     NATS={
